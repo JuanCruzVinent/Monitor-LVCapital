@@ -1438,6 +1438,197 @@
       section.statsEl.classList.remove('hidden');
     }
 
+    /* ============================================================
+       TIR (YTM) - CALCULO EN FRONTEND
+       ============================================================
+       La API no devuelve TIR. Se calcula con Newton-Raphson usando:
+         - Precio actual (campo "c" de la API, en USD por $100 VN)
+         - Parametros de cada bono: vencimiento, cupon, face restante
+       Los parametros estan basados en la reestructuracion 2020.
+       NOTA: la TIR mostrada es INDICATIVA. Para operaciones usar
+       fuentes profesionales certificadas.
+       ============================================================ */
+
+    /**
+     * Catalogo de parametros por bono.
+     * mat   : anios hasta vencimiento desde 2020 (se recalcula vs hoy)
+     * cpn   : tasa cupon anual % sobre face restante
+     * face  : face restante por cada $100 VN original (aprox.)
+     * matDate: fecha de vencimiento YYYY-MM-DD
+     */
+    /* ── Catálogo de flujos exactos extraídos del Excel Flujos_automatizados.xlsm ──
+       Cada entrada tiene:
+         tir   : TIR calculada en el Excel con flujos reales (%)
+         flows : array de {date, flow} con todos los flujos futuros
+                 flow = USD por cada $100 VN original
+       Fuente: pestaña "Flujos Soberanos"
+    ── */
+    var BOND_CATALOG = {
+      'AE38D': { tir: 10.9672, flows: [{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}] },
+      'AL29D': { tir:  8.9594, flows: [{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}] },
+      'AL30D': { tir:  9.8401, flows: [{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}] },
+      'AL35D': { tir: 10.5896, flows: [{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}] },
+      'AL41D': { tir: 10.7506, flows: [{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}] },
+      'AN29D': { tir:  9.5939, flows: [{"date":"2026-05-30","flow":0.0303},{"date":"2026-11-30","flow":0.0325},{"date":"2027-05-30","flow":0.0325},{"date":"2027-11-30","flow":0.0325},{"date":"2028-05-30","flow":0.0325},{"date":"2028-11-30","flow":0.0325},{"date":"2029-05-30","flow":0.0325},{"date":"2029-11-30","flow":1.0325}] },
+      'AO27D': { tir:  5.1798, flows: [{"date":"2026-03-31","flow":0.0057},{"date":"2026-04-30","flow":0.005},{"date":"2026-05-29","flow":0.0048},{"date":"2026-06-30","flow":0.0052},{"date":"2026-07-31","flow":0.005},{"date":"2026-08-31","flow":0.005},{"date":"2026-09-30","flow":0.005},{"date":"2026-10-30","flow":0.005},{"date":"2026-11-30","flow":0.005},{"date":"2026-12-30","flow":0.005},{"date":"2027-01-29","flow":0.0048},{"date":"2027-02-26","flow":0.0045},{"date":"2027-03-31","flow":0.0058},{"date":"2027-04-30","flow":0.005},{"date":"2027-05-31","flow":0.005},{"date":"2027-06-30","flow":0.005},{"date":"2027-07-30","flow":0.005},{"date":"2027-08-31","flow":0.005},{"date":"2027-09-30","flow":0.005},{"date":"2027-10-29","flow":1.0048}] },
+      'GD29D': { tir:  7.3128, flows: [{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}] },
+      'GD30D': { tir:  8.4977, flows: [{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}] },
+      'GD35D': { tir: 10.1893, flows: [{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}] },
+      'GD38D': { tir: 10.2549, flows: [{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}] },
+      'GD41D': { tir: 10.4493, flows: [{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}] },
+    };
+
+    /**
+     * Calcula TIR exacta usando Newton-Raphson con los flujos reales del Excel.
+     * @param {string} symbol  - Ticker (ej: "GD30D")
+     * @param {number} price   - Precio actual de la API (USD por $100 VN)
+     * @returns {number|null}  - TIR en % anual
+     */
+    function calcYTM(symbol, price) {
+      var b  = BOND_CATALOG[symbol ? symbol.toUpperCase() : ''];
+      if (!b || !b.flows || b.flows.length === 0) { return null; }
+
+      var px = parseFloat(price);
+      if (isNaN(px) || px <= 0) { return null; }
+
+      var today = new Date().getTime();
+
+      // Construir array de {t (años), flow} con fechas reales
+      var cashflows = [];
+      b.flows.forEach(function(f) {
+        var d = new Date(f.date).getTime();
+        var t = (d - today) / (365.25 * 24 * 3600 * 1000);
+        if (t > 0) {
+          cashflows.push({ t: t, flow: f.flow });
+        }
+      });
+
+      if (cashflows.length === 0) { return null; }
+
+      // PV(y) - precio = 0  →  Newton-Raphson
+      function pv(y) {
+        return cashflows.reduce(function(acc, cf) {
+          return acc + cf.flow / Math.pow(1 + y, cf.t);
+        }, 0);
+      }
+
+      function dpv(y) {
+        return cashflows.reduce(function(acc, cf) {
+          return acc - cf.t * cf.flow / Math.pow(1 + y, cf.t + 1);
+        }, 0);
+      }
+
+      var y = 0.10;
+      for (var i = 0; i < 100; i++) {
+        var f  = pv(y) - px;
+        var df = dpv(y);
+        if (Math.abs(df) < 1e-14) { break; }
+        var yn = y - f / df;
+        if (yn < -0.99) { yn = -0.99; }
+        if (yn > 10.0)  { yn = 10.0;  }
+        if (Math.abs(yn - y) < 1e-10) { y = yn; break; }
+        y = yn;
+      }
+
+      if (isNaN(y) || y < -0.99 || y > 10) { return null; }
+      return y * 100;
+    }
+
+    /**
+     * Formatea la TIR para mostrar en tabla.
+     */
+    function fmtYTM(symbol, price) {
+      var tir = calcYTM(symbol, price);
+      if (tir === null) {
+        // Si no hay precio de API, usar TIR de referencia del Excel
+        var b = BOND_CATALOG[symbol ? symbol.toUpperCase() : ''];
+        if (b && b.tir) {
+          return '<span class="text-[#3d5a73] text-[10px]" title="TIR de referencia (sin precio live)">'
+               + b.tir.toFixed(2) + '%*</span>';
+        }
+        return '<span class="var-neutral">—</span>';
+      }
+      var cls = tir > 15 ? 'text-[#c9943a]'
+              : tir > 10 ? 'text-[#86afce]'
+              : 'text-[#dce8f2]';
+      return '<span class="' + cls + ' font-semibold">' + tir.toFixed(2) + '%</span>';
+    }
+
+    /**
+     * Render especial para tablas de bonos con columna TIR.
+     * Misma logica que renderTable pero con columna extra.
+     */
+    function renderBondsTable(section, items) {
+      if (!items || items.length === 0) {
+        section.tableEl.innerHTML =
+          '<div class="px-6 py-10 text-center font-display text-[11px] '
+          + 'tracking-widest uppercase text-[#1e3a52]">Sin datos disponibles</div>';
+        return;
+      }
+
+      var activeSortKey = section.sortKey || null;
+      var activeSortDir = section.sortDir || 'asc';
+
+      // Columnas especificas para bonos (incluye TIR)
+      var BOND_COLS = [
+        { key:'symbol', label:'Símbolo', align:'left',  optional:false, isTir:false },
+        { key:'last',   label:'Precio',  align:'right', optional:false, isTir:false },
+        { key:'tir',    label:'TIR est.', align:'right', optional:false, isTir:true  },
+        { key:'change', label:'Var %',   align:'right', optional:false, isTir:false },
+        { key:'volume', label:'Nominal', align:'right', optional:true,  isTir:false },
+      ];
+
+      var html = '<table class="market-table"><thead><tr>';
+
+      BOND_COLS.forEach(function(col) {
+        var optClass   = col.optional ? ' col-optional' : '';
+        var alignClass = col.align === 'right' ? ' text-right' : '';
+        var isSorted   = (col.key === activeSortKey);
+        var sortClass  = isSorted ? ' sorted' : '';
+        // TIR no es sortable (es calculada)
+        var thClass = col.isTir
+          ? (optClass + alignClass)
+          : ('sortable' + optClass + alignClass + sortClass);
+        var dataKey = col.isTir ? '' : ' data-key="' + col.key + '"';
+        var icon = '';
+        if (!col.isTir) {
+          icon = '<span class="sort-icon">'
+               + (isSorted ? (activeSortDir === 'asc' ? '↑' : '↓') : '⇅')
+               + '</span>';
+        }
+
+        html += '<th class="' + thClass + '"' + dataKey + '>'
+             +  col.label + icon
+             +  '</th>';
+      });
+
+      html += '</tr></thead><tbody>';
+
+      items.forEach(function(raw) {
+        var item = normalizeItem(raw);
+        html += '<tr>';
+        html += '<td class="col-symbol">' + item.symbol + '</td>';
+        html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
+        html += '<td class="text-right font-data">' + fmtYTM(item.symbol, item.last) + '</td>';
+        html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
+        html += '<td class="text-right font-data col-optional">' + fmtVolume(item.volume) + '</td>';
+        html += '</tr>';
+      });
+
+      // Nota de disclaimer al pie de la tabla
+      html += '</tbody></table>';
+      html += '<div class="px-4 py-2 border-t border-[#172b40] bg-[#0d1a27]">'
+            + '<span class="font-display text-[9px] tracking-[0.1em] text-[#1e3a52] uppercase">'
+            + '* TIR estimada · Cálculo simplificado · No apta para operaciones'
+            + '</span></div>';
+
+      section.tableEl.innerHTML = html;
+
+      // Adjuntar sort listeners (solo para columnas no-TIR)
+      attachSortListeners(section.tableEl, section);
+    }
+
+
     /* ----------------------------------------------------------
        BONOS SOBERANOS: filtros por Ley
        Los tickers se filtran del endpoint arg_bonds
@@ -1491,8 +1682,8 @@
       window._bondNySection  = nySection;
       window._bondArgSection = argSection;
 
-      renderTable(nySection,  nyItems);
-      renderTable(argSection, argItems);
+      renderBondsTable(nySection,  nyItems);
+      renderBondsTable(argSection, argItems);
     }
 
     /** Carga todas las secciones en paralelo */
