@@ -504,81 +504,66 @@
     }
 
     /* ─────────────────────────────────────────────────────────────
-       FETCH MERCADOS GLOBALES - estrategia mixta sin API key
-       - Yahoo Finance batch via proxy (indices + commodities)
-       - CoinGecko directo (CORS OK, sin key) para BTC/ETH
+       FETCH MERCADOS GLOBALES
+       Llama a la funcion serverless Netlify /.netlify/functions/mundo
+       que hace el proxy a Yahoo Finance desde el servidor (sin CORS).
+       Fallback a CoinGecko directo solo para crypto si la funcion falla.
        ───────────────────────────────────────────────────────────── */
 
-    function fetchYahooMarkets(yahooAssets) {
-      var symbols = yahooAssets.map(function(a){ return YAHOO_SYMBOLS[a.id]; }).join(',');
-      var yahooUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + symbols;
-      /* Proxies en cascada - sin encodeURIComponent para evitar doble encoding */
-      var proxies = [
-        'https://corsproxy.io/?' + yahooUrl,
-        'https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl),
-        'https://thingproxy.freeboard.io/fetch/' + yahooUrl,
-      ];
-
-      function tryProxy(i) {
-        if (i >= proxies.length) {
-          return Promise.resolve(yahooAssets.map(function(a){
-            return { asset:a, price:null, change:0, changeAbs:0, error:true };
-          }));
-        }
-        return fetch(proxies[i])
-          .then(function(res){ if(!res.ok){throw new Error(res.status);} return res.json(); })
-          .then(function(raw){
-            var data = raw.contents ? JSON.parse(raw.contents) : raw;
-            var quotes = (data.quoteResponse && data.quoteResponse.result) ? data.quoteResponse.result : [];
-            return yahooAssets.map(function(asset){
-              var sym = YAHOO_SYMBOLS[asset.id];
-              var q = null;
-              for (var j=0;j<quotes.length;j++){ if(quotes[j].symbol===sym){q=quotes[j];break;} }
-              if (!q){ return {asset:asset,price:null,change:0,changeAbs:0,error:true}; }
-              var price  = q.regularMarketPrice;
-              var prev   = q.regularMarketPreviousClose || price;
-              var change = prev ? ((price-prev)/prev)*100 : 0;
-              return {asset:asset, price:price, change:change, changeAbs:price-prev, error:false};
-            });
-          })
-          .catch(function(){ return tryProxy(i+1); });
-      }
-      return tryProxy(0);
-    }
-
-    function fetchCryptoMarkets(cryptoAssets) {
-      var ids = cryptoAssets.map(function(a){ return COINGECKO_IDS[a.id]; }).join(',');
-      /* CoinGecko tiene CORS habilitado y no requiere API key */
-      var url = 'https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true';
-      return fetch(url)
-        .then(function(res){ if(!res.ok){throw new Error(res.status);} return res.json(); })
-        .then(function(data){
-          return cryptoAssets.map(function(asset){
-            var geckoId = COINGECKO_IDS[asset.id];
-            var d = data[geckoId];
-            if (!d){ return {asset:asset,price:null,change:0,changeAbs:0,error:true}; }
-            var price  = d.usd;
-            var change = d.usd_24h_change || 0;
-            var prev   = change !== 0 ? price / (1 + change/100) : price;
-            return {asset:asset, price:price, change:change, changeAbs:price-prev, error:false};
-          });
-        })
-        .catch(function(){
-          return cryptoAssets.map(function(a){return {asset:a,price:null,change:0,changeAbs:0,error:true};});
-        });
-    }
-
     function loadGlobalMarkets() {
-      var yahooAssets  = GLOBAL_ASSETS.filter(function(a){ return !!YAHOO_SYMBOLS[a.id]; });
-      var cryptoAssets = GLOBAL_ASSETS.filter(function(a){ return !!COINGECKO_IDS[a.id]; });
-      Promise.all([fetchYahooMarkets(yahooAssets), fetchCryptoMarkets(cryptoAssets)])
-        .then(function(parts){
-          var all = parts[0].concat(parts[1]);
-          var ordered = GLOBAL_ASSETS.map(function(asset){
-            for(var i=0;i<all.length;i++){ if(all[i].asset.id===asset.id){ return all[i]; } }
-            return {asset:asset,price:null,change:0,changeAbs:0,error:true};
+      /* La funcion Netlify devuelve { data: [...], updated: "..." } */
+      fetch('/.netlify/functions/mundo')
+        .then(function(res) { if (!res.ok) { throw new Error('HTTP ' + res.status); } return res.json(); })
+        .then(function(json) {
+          var results = (json.data || []).map(function(item) {
+            /* Mapear formato de la funcion al formato que espera renderGlobalMarkets */
+            var asset = null;
+            for (var i = 0; i < GLOBAL_ASSETS.length; i++) {
+              if (GLOBAL_ASSETS[i].id === item.id) { asset = GLOBAL_ASSETS[i]; break; }
+            }
+            if (!asset) { return null; }
+            if (item.error || item.price === null) {
+              return { asset: asset, price: null, change: 0, changeAbs: 0, error: true };
+            }
+            var prev      = item.prev || item.price;
+            var changeAbs = item.price - prev;
+            return { asset: asset, price: item.price, change: item.change || 0, changeAbs: changeAbs, error: false };
+          }).filter(function(r) { return r !== null; });
+
+          /* Ordenar segun GLOBAL_ASSETS */
+          var ordered = GLOBAL_ASSETS.map(function(asset) {
+            for (var i = 0; i < results.length; i++) {
+              if (results[i].asset.id === asset.id) { return results[i]; }
+            }
+            return { asset: asset, price: null, change: 0, changeAbs: 0, error: true };
           });
+
           renderGlobalMarkets(ordered);
+        })
+        .catch(function(err) {
+          console.warn('[LV Capital] Funcion mundo fallo, intentando CoinGecko para crypto:', err.message);
+          /* Fallback solo crypto via CoinGecko */
+          var url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true';
+          return fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var cryptoMap = { 'bitcoin': 'bitcoin', 'ethereum': 'ethereum' };
+              var results = GLOBAL_ASSETS.map(function(asset) {
+                var geckoId = cryptoMap[asset.id];
+                if (!geckoId) { return { asset: asset, price: null, change: 0, changeAbs: 0, error: true }; }
+                var d = data[geckoId];
+                if (!d) { return { asset: asset, price: null, change: 0, changeAbs: 0, error: true }; }
+                var change = d.usd_24h_change || 0;
+                return { asset: asset, price: d.usd, change: change, changeAbs: d.usd * change / 100, error: false };
+              });
+              renderGlobalMarkets(results);
+            })
+            .catch(function() {
+              /* Todo fallo: mostrar dash en todas las cards */
+              renderGlobalMarkets(GLOBAL_ASSETS.map(function(a) {
+                return { asset: a, price: null, change: 0, changeAbs: 0, error: true };
+              }));
+            });
         });
     }
 
