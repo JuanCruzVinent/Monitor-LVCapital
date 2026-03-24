@@ -1108,6 +1108,91 @@
        Construye el HTML de la tabla con los datos normalizados
     ------------------------------------------------------------ */
 
+    /* ============================================================
+       PASO 6 - SORT DE COLUMNAS
+       ============================================================
+       Logica:
+         - Cada <th> tiene data-key con el nombre del campo
+         - Al hacer click: si ya estaba ordenado por ese campo,
+           invierte la direccion (asc -> desc -> asc)
+           Si es un campo nuevo, ordena asc por defecto
+         - Los datos crudos se guardan en section.rawData para
+           poder re-sortear sin volver a llamar a la API
+         - El icono del header muestra: ↑ asc / ↓ desc / ⇅ sin orden
+       ============================================================ */
+
+    /**
+     * Ordena un array de items normalizados por un campo dado.
+     * @param {Array}  items  - Array de objetos normalizados
+     * @param {string} key    - Campo por el que ordenar
+     * @param {string} dir    - 'asc' o 'desc'
+     * @returns {Array} nuevo array ordenado (no muta el original)
+     */
+    function sortItems(items, key, dir) {
+      var sorted = items.slice(); // copia para no mutar el original
+
+      sorted.sort(function(a, b) {
+        var normA = normalizeItem(a);
+        var normB = normalizeItem(b);
+        var valA  = normA[key];
+        var valB  = normB[key];
+
+        // Intentar comparacion numerica primero
+        var numA = parseFloat(valA);
+        var numB = parseFloat(valB);
+
+        var result;
+        if (!isNaN(numA) && !isNaN(numB)) {
+          // Comparacion numerica
+          result = numA - numB;
+        } else {
+          // Comparacion alfabetica (para simbolos)
+          var strA = String(valA || '').toUpperCase();
+          var strB = String(valB || '').toUpperCase();
+          result   = strA < strB ? -1 : strA > strB ? 1 : 0;
+        }
+
+        // Valores nulos/vacios van al final siempre
+        if (valA === null || valA === '' || valA === '—') { return 1; }
+        if (valB === null || valB === '' || valB === '—') { return -1; }
+
+        return dir === 'desc' ? -result : result;
+      });
+
+      return sorted;
+    }
+
+    /**
+     * Adjunta los listeners de sort a los <th> de una tabla ya renderizada.
+     * @param {HTMLElement} tableEl  - El contenedor div de la tabla
+     * @param {Object}      section  - El objeto de seccion (tiene rawData, sortKey, sortDir)
+     */
+    function attachSortListeners(tableEl, section) {
+      var headers = tableEl.querySelectorAll('th.sortable');
+
+      headers.forEach(function(th) {
+        th.addEventListener('click', function() {
+          var clickedKey = th.dataset.key;
+
+          // Determinar nueva direccion
+          if (section.sortKey === clickedKey) {
+            // Mismo campo: invertir direccion
+            section.sortDir = section.sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            // Campo nuevo: empezar en asc
+            section.sortKey = clickedKey;
+            section.sortDir = 'asc';
+          }
+
+          // Ordenar los datos crudos guardados
+          var sorted = sortItems(section.rawData || [], section.sortKey, section.sortDir);
+
+          // Re-renderizar la tabla con datos ordenados
+          renderTable(section, sorted);
+        });
+      });
+    }
+
     function renderTable(section, items) {
       if (!items || items.length === 0) {
         section.tableEl.innerHTML =
@@ -1116,16 +1201,28 @@
         return;
       }
 
+      var activeSortKey = section.sortKey || null;
+      var activeSortDir = section.sortDir || 'asc';
+
       var html = '<table class="market-table"><thead><tr>';
 
-      // Cabeceras
+      // Cabeceras con icono de sort dinamico
       COLUMNS.forEach(function(col) {
-        var optClass  = col.optional ? ' col-optional' : '';
+        var optClass   = col.optional ? ' col-optional' : '';
         var alignClass = col.align === 'right' ? ' text-right' : '';
-        html += '<th class="sortable' + optClass + alignClass
+        var isSorted   = (col.key === activeSortKey);
+        var sortedClass = isSorted ? ' sorted' : '';
+
+        // Icono: flecha segun estado
+        var icon;
+        if (!isSorted)                        { icon = '⇅'; }
+        else if (activeSortDir === 'asc')     { icon = '↑'; }
+        else                                  { icon = '↓'; }
+
+        html += '<th class="sortable' + optClass + alignClass + sortedClass
              +  '" data-key="' + col.key + '">'
              +  col.label
-             +  '<span class="sort-icon">⇅</span>'
+             +  '<span class="sort-icon">' + icon + '</span>'
              +  '</th>';
       });
 
@@ -1146,6 +1243,9 @@
 
       html += '</tbody></table>';
       section.tableEl.innerHTML = html;
+
+      // Adjuntar listeners de sort a los headers recien creados
+      attachSortListeners(section.tableEl, section);
     }
 
 
@@ -1180,6 +1280,13 @@
                     : data.result ? data.result
                     : [];
 
+          // Guardar los datos crudos en la seccion para poder re-sortear sin refetch
+          section.rawData = items;
+
+          // Resetear sort al cargar datos frescos
+          section.sortKey = null;
+          section.sortDir = 'asc';
+
           renderTable(section, items);
 
           console.info(
@@ -1202,15 +1309,160 @@
     }
 
 
+    /* ============================================================
+       PASO 5 - AUTO-REFRESH + COUNTDOWN BAR + RELOJ
+       ============================================================
+       Tres mecanismos coordinados:
+         1. RELOJ      : actualiza last-update-time cada segundo
+         2. COUNTDOWN  : cuenta regresiva visual de 30s hacia 0
+                         - barra de progreso (width 100% -> 0%)
+                         - numero de segundos en pantalla
+         3. AUTO-REFRESH: cada 30s llama a loadAllSections()
+                          y reinicia el countdown
+       El boton "Actualizar" del header hace un refresh manual
+       inmediato y tambien reinicia el countdown.
+       ============================================================ */
+
+
     /* ------------------------------------------------------------
-       INICIALIZACION
+       RELOJ - actualiza la hora de ultima actualizacion
+    ------------------------------------------------------------ */
+
+    function updateClock() {
+      var now  = new Date();
+      var hh   = String(now.getHours()).padStart(2, '0');
+      var mm   = String(now.getMinutes()).padStart(2, '0');
+      var ss   = String(now.getSeconds()).padStart(2, '0');
+      if (DOM.lastUpdateTime) {
+        DOM.lastUpdateTime.textContent = hh + ':' + mm + ':' + ss;
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       COUNTDOWN BAR
+       Anima la barra de progreso y el contador de segundos
+    ------------------------------------------------------------ */
+
+    function startCountdown() {
+      // Limpiar timer previo si existe
+      if (state.countdownTimer) {
+        clearInterval(state.countdownTimer);
+      }
+
+      // Resetear al maximo
+      state.countdownSecs = REFRESH_INTERVAL / 1000;
+      updateCountdownUI(state.countdownSecs);
+
+      state.countdownTimer = setInterval(function() {
+        state.countdownSecs -= 1;
+
+        if (state.countdownSecs <= 0) {
+          state.countdownSecs = 0;
+        }
+
+        updateCountdownUI(state.countdownSecs);
+      }, 1000);
+    }
+
+    function updateCountdownUI(secs) {
+      // Numero de segundos
+      if (DOM.countdownSeconds) {
+        DOM.countdownSeconds.textContent = secs;
+      }
+
+      // Barra de progreso: width en porcentaje
+      if (DOM.countdownBar) {
+        var pct = (secs / (REFRESH_INTERVAL / 1000)) * 100;
+        DOM.countdownBar.style.width = pct + '%';
+
+        // Cambia color cuando quedan menos de 5 segundos
+        if (secs <= 5) {
+          DOM.countdownBar.style.background = 'linear-gradient(90deg, #c9943a, #e0b85c)';
+        } else {
+          DOM.countdownBar.style.background = 'linear-gradient(90deg, #0d5184, #86afce)';
+        }
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       AUTO-REFRESH
+       Ejecuta loadAllSections() cada REFRESH_INTERVAL ms
+    ------------------------------------------------------------ */
+
+    function startAutoRefresh() {
+      // Limpiar timer previo si existe
+      if (state.refreshTimer) {
+        clearInterval(state.refreshTimer);
+      }
+
+      state.refreshTimer = setInterval(function() {
+        doRefresh();
+      }, REFRESH_INTERVAL);
+    }
+
+    /** Ejecuta un refresh completo y reinicia el countdown */
+    function doRefresh() {
+      // Animacion en el icono del boton
+      setRefreshSpinning(true);
+
+      loadAllSections();
+      updateClock();
+      startCountdown(); // reinicia el countdown desde 30
+
+      // Detener animacion despues de 1.5s
+      setTimeout(function() {
+        setRefreshSpinning(false);
+      }, 1500);
+    }
+
+    /** Activa o desactiva la animacion de spin en el icono refresh */
+    function setRefreshSpinning(spinning) {
+      if (!DOM.refreshIcon) { return; }
+      if (spinning) {
+        DOM.refreshIcon.style.animation = 'spin 0.8s linear infinite';
+      } else {
+        DOM.refreshIcon.style.animation = '';
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       BOTON REFRESH MANUAL
+    ------------------------------------------------------------ */
+
+    function initRefreshButton() {
+      if (!DOM.btnRefresh) { return; }
+
+      DOM.btnRefresh.addEventListener('click', function() {
+        // Reiniciar el auto-refresh para que cuente desde cero
+        startAutoRefresh();
+        doRefresh();
+      });
+    }
+
+
+    /* ------------------------------------------------------------
+       INICIALIZACION COMPLETA
     ------------------------------------------------------------ */
 
     document.addEventListener('DOMContentLoaded', function() {
-      initTabs();
-      loadAllSections();    // PASO 3: carga inicial de datos
-      // initCountdown()    <- PASO 5
-      // initAutoRefresh()  <- PASO 5
+      initTabs();           // Paso 2: navegacion por tabs
+      loadAllSections();    // Paso 3: carga inicial de datos
+      updateClock();        // Paso 5: mostrar hora actual
+      startCountdown();     // Paso 5: iniciar countdown bar
+      startAutoRefresh();   // Paso 5: programar auto-refresh
+      initRefreshButton();  // Paso 5: boton manual
+
+      // Actualizar el reloj cada segundo (solo la hora, sin refetch)
+      setInterval(updateClock, 1000);
+
+      console.info(
+        '%c LV Capital %c auto-refresh OK · cada 30s',
+        'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
+        'color:#3d5a73'
+      );
     });
 
   </script>
