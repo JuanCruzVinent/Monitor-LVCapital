@@ -195,6 +195,18 @@
     }
     html.light .market-card-skeleton { background:linear-gradient(90deg,#ffffff 25%,#dce8f2 50%,#ffffff 75%) !important; background-size:200% 100% !important; border-color:#c8d9e8 !important; }
 
+    /* ---- Sparkline ---- */
+    .sparkline-wrap { margin-top:10px; overflow:hidden; border-radius:3px; }
+    .sparkline-svg  { display:block; width:100%; height:40px; }
+    .sparkline-line { fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+    .sparkline-area { opacity:0.12; }
+    .spark-positive { stroke:#4db88a; }
+    .spark-negative { stroke:#e05c5c; }
+    .spark-neutral  { stroke:#86afce; }
+    .spark-area-pos { fill:#4db88a; }
+    .spark-area-neg { fill:#e05c5c; }
+    .spark-area-neu { fill:#86afce; }
+
     @media (max-width: 640px) {
       .col-optional { display:none; }
       .market-table thead th, .market-table tbody td { padding:9px 12px; }
@@ -470,6 +482,46 @@
       return (asset.prefix || '') + formatted + (asset.suffix || '');
     }
 
+    /**
+     * Genera un SVG de sparkline a partir de un array de precios.
+     * @param {number[]} prices  - Array de precios
+     * @param {string}   cls     - Clase de color (positive/negative/neutral)
+     */
+    function buildSparklineSVG(prices, cls) {
+      if (!prices || prices.length < 2) { return ''; }
+
+      var W = 200, H = 40;
+      var min = Math.min.apply(null, prices);
+      var max = Math.max.apply(null, prices);
+      var range = max - min || 1;
+      var pad = 3;
+
+      // Calcular puntos
+      var points = prices.map(function(p, i) {
+        var x = pad + (i / (prices.length - 1)) * (W - pad * 2);
+        var y = H - pad - ((p - min) / range) * (H - pad * 2);
+        return x.toFixed(2) + ',' + y.toFixed(2);
+      });
+
+      var polyline = points.join(' ');
+
+      // Area: añadir esquinas inferiores para cerrar el path
+      var firstX = pad;
+      var lastX  = (pad + (W - pad * 2)).toFixed(2);
+      var bottom = H - pad;
+      var areaPoints = points.join(' ') + ' ' + lastX + ',' + bottom + ' ' + firstX + ',' + bottom;
+
+      var lineClass = 'sparkline-line spark-' + cls;
+      var areaClass = 'sparkline-area spark-area-' + cls.replace('positive','pos').replace('negative','neg').replace('neutral','neu');
+
+      return '<div class="sparkline-wrap">'
+           + '<svg class="sparkline-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
+           + '<polygon class="' + areaClass + '" points="' + areaPoints + '"/>'
+           + '<polyline class="' + lineClass + '" points="' + polyline + '"/>'
+           + '</svg>'
+           + '</div>';
+    }
+
     function renderGlobalMarkets(results) {
       var grid = document.getElementById('global-markets-grid');
       if (!grid) { return; }
@@ -492,6 +544,10 @@
           html += '<div class="card-change ' + changeClass + '">' + arrow + ' ' + sign + item.change.toFixed(2) + '%'
                + '<span style="opacity:0.4;font-size:0.68rem;margin-left:6px">'
                + (item.changeAbs >= 0 ? '+' : '') + fmtGlobalPrice(item.changeAbs, asset) + '</span></div>';
+          // Sparkline
+          if (item.sparkline && item.sparkline.length >= 2) {
+            html += buildSparklineSVG(item.sparkline, changeClass);
+          }
         }
         html += '</div>';
       });
@@ -523,11 +579,11 @@
             }
             if (!asset) { return null; }
             if (item.error || item.price === null) {
-              return { asset: asset, price: null, change: 0, changeAbs: 0, error: true };
+              return { asset: asset, price: null, change: 0, changeAbs: 0, sparkline: [], error: true };
             }
             var prev      = item.prev || item.price;
             var changeAbs = item.price - prev;
-            return { asset: asset, price: item.price, change: item.change || 0, changeAbs: changeAbs, error: false };
+            return { asset: asset, price: item.price, change: item.change || 0, changeAbs: changeAbs, sparkline: item.sparkline || [], error: false };
           }).filter(function(r) { return r !== null; });
 
           /* Ordenar segun GLOBAL_ASSETS */
