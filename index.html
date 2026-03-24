@@ -724,22 +724,21 @@
        JAVASCRIPT
   ============================================================ -->
   <script>
-    /**
-     * ================================================================
-     *  LV Capital · Monitor de Mercados · Script principal
-     * ================================================================
-     *
-     *  TODO (próximos pasos):
-     *  ─────────────────────
-     *  [ ] PASO 2 · Sistema de tabs
-     *  [ ] PASO 3 · API fetcher con skeleton + manejo de errores
-     *  [ ] PASO 4 · Render de tablas (Símbolo, Último, Var%, Vol, Bid, Ask)
-     *  [ ] PASO 5 · Auto-refresh 30s + countdown bar + reloj
-     *  [ ] PASO 6 · Sort de columnas
-     *  [ ] PASO 7 · Stats rápidas por sección
-     *
-     * ================================================================
-     */
+    /* ================================================================
+       LV Capital · Monitor de Mercados · Script principal
+       ================================================================
+       [✓] PASO 2 · Sistema de tabs
+       [ ] PASO 3 · API fetcher con skeleton + manejo de errores
+       [ ] PASO 4 · Render de tablas (Símbolo, Último, Var%, Vol, Bid, Ask)
+       [ ] PASO 5 · Auto-refresh 30s + countdown bar + reloj
+       [ ] PASO 6 · Sort de columnas
+       [ ] PASO 7 · Stats rápidas por sección
+       ================================================================ */
+
+
+    /* ------------------------------------------------------------
+       CONSTANTES
+    ------------------------------------------------------------ */
 
     const API = {
       bonds:   'https://data912.com/live/arg_bonds',
@@ -748,7 +747,12 @@
       cedears: 'https://data912.com/live/arg_cedears',
     };
 
-    const REFRESH_INTERVAL = 30_000;
+    const REFRESH_INTERVAL = 30000; // 30 segundos
+
+
+    /* ------------------------------------------------------------
+       REFERENCIAS AL DOM
+    ------------------------------------------------------------ */
 
     const DOM = {
       tabButtons:       document.querySelectorAll('.tab-btn'),
@@ -757,6 +761,7 @@
       lastUpdateTime:   document.getElementById('last-update-time'),
       marketBadge:      document.getElementById('market-status-badge'),
       btnRefresh:       document.getElementById('btn-refresh'),
+      refreshIcon:      document.getElementById('refresh-icon'),
       countdownBar:     document.getElementById('countdown-bar'),
       countdownSeconds: document.getElementById('countdown-seconds'),
       tableBonds:       document.getElementById('table-bonds'),
@@ -769,18 +774,445 @@
       errorCedears:     document.getElementById('error-cedears'),
     };
 
+
+    /* ------------------------------------------------------------
+       ESTADO GLOBAL
+    ------------------------------------------------------------ */
+
     const state = {
       activeTab:      'section-bonds',
       sortConfig:     { key: null, dir: 'asc' },
       refreshTimer:   null,
       countdownTimer: null,
+      countdownSecs:  REFRESH_INTERVAL / 1000,
     };
 
-    console.info(
-      '%c LV Capital %c estructura base + brand ✓',
-      'background:#172b40;color:#86afce;font-family:Raleway,sans-serif;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:2px',
-      'color:#3d5a73'
-    );
+
+    /* ============================================================
+       PASO 2 - SISTEMA DE TABS
+       ============================================================
+       Logica:
+         1. Click en un tab-btn:
+            a. Remover "active" de todos los botones y secciones
+            b. Remover el span.tab-indicator de todos los botones
+            c. Agregar "active" al boton clickeado y su seccion target
+            d. Inyectar el indicador visual bajo el tab activo
+            e. Actualizar atributos ARIA
+            f. Guardar en state.activeTab
+         2. Teclado: flechas izq/der navegan entre tabs (WAI-ARIA)
+       ============================================================ */
+
+    /**
+     * Activa un tab y muestra su seccion correspondiente.
+     * @param {HTMLElement} targetBtn  - El boton del tab a activar
+     * @param {boolean}     focusBtn   - Si debe hacer foco (teclado)
+     */
+    function activateTab(targetBtn, focusBtn) {
+      if (focusBtn === undefined) { focusBtn = false; }
+      var targetSectionId = targetBtn.dataset.target;
+
+      // 1. Desactivar todos los tabs
+      DOM.tabButtons.forEach(function(btn) {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+        var existingIndicator = btn.querySelector('.tab-indicator');
+        if (existingIndicator) { existingIndicator.remove(); }
+      });
+
+      // 2. Ocultar todas las secciones
+      DOM.tabSections.forEach(function(section) {
+        section.classList.remove('active');
+      });
+
+      // 3. Activar el tab clickeado
+      targetBtn.classList.add('active');
+      targetBtn.setAttribute('aria-selected', 'true');
+
+      // Inyectar indicador de linea bajo el tab activo
+      var indicator = document.createElement('span');
+      indicator.className = 'tab-indicator';
+      targetBtn.appendChild(indicator);
+
+      // 4. Mostrar la seccion correspondiente
+      var targetSection = document.getElementById(targetSectionId);
+      if (targetSection) {
+        targetSection.classList.add('active');
+      }
+
+      // 5. Actualizar estado
+      state.activeTab = targetSectionId;
+
+      // 6. Foco para navegacion por teclado
+      if (focusBtn) { targetBtn.focus(); }
+    }
+
+    /**
+     * Inicializa los event listeners de los tabs.
+     * Agrega soporte de teclado: flechas izq/der, Home, End.
+     */
+    function initTabs() {
+      var btnArray = Array.from(DOM.tabButtons);
+
+      // Click en cada tab
+      btnArray.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          activateTab(btn);
+        });
+      });
+
+      // Navegacion por teclado (WAI-ARIA tab pattern)
+      btnArray.forEach(function(btn, index) {
+        btn.addEventListener('keydown', function(e) {
+          var nextIndex = null;
+
+          if (e.key === 'ArrowRight') {
+            nextIndex = (index + 1) % btnArray.length;
+          } else if (e.key === 'ArrowLeft') {
+            nextIndex = (index - 1 + btnArray.length) % btnArray.length;
+          } else if (e.key === 'Home') {
+            nextIndex = 0;
+          } else if (e.key === 'End') {
+            nextIndex = btnArray.length - 1;
+          }
+
+          if (nextIndex !== null) {
+            e.preventDefault();
+            activateTab(btnArray[nextIndex], true);
+          }
+        });
+      });
+
+      // Asegurar que el tab inicial tenga el indicador visible
+      var initialTab = document.querySelector('.tab-btn.active');
+      if (initialTab && !initialTab.querySelector('.tab-indicator')) {
+        var ind = document.createElement('span');
+        ind.className = 'tab-indicator';
+        initialTab.appendChild(ind);
+      }
+
+      console.info(
+        '%c LV Capital %c tabs OK [ bonds | notes | stocks | cedears ]',
+        'background:#172b40;color:#86afce;font-weight:700;padding:3px 8px;border-radius:2px',
+        'color:#3d5a73;font-size:11px'
+      );
+    }
+
+
+    /* ============================================================
+       PASO 3 - API FETCHER + SKELETON + RENDER DE TABLAS
+       ============================================================
+       Cada seccion tiene:
+         - tableContainer : div donde se inyecta la tabla
+         - errorContainer : div donde se muestra el error
+       Flujo por seccion:
+         1. showSkeleton()  -> muestra filas animadas mientras carga
+         2. fetchData()     -> llama a la API con fetch()
+         3. renderTable()   -> construye la tabla con los datos
+         4. showError()     -> si falla, muestra mensaje con boton reintentar
+       ============================================================ */
+
+
+    /* ------------------------------------------------------------
+       CONFIGURACION DE CADA SECCION
+       Mapea cada key interno con su endpoint, contenedor y etiquetas
+    ------------------------------------------------------------ */
+
+    var SECTIONS = {
+      bonds: {
+        url:       API.bonds,
+        tableEl:   DOM.tableBonds,
+        errorEl:   DOM.errorBonds,
+        label:     'Bonos Soberanos'
+      },
+      notes: {
+        url:       API.notes,
+        tableEl:   DOM.tableNotes,
+        errorEl:   DOM.errorNotes,
+        label:     'Letras & T. Fija'
+      },
+      stocks: {
+        url:       API.stocks,
+        tableEl:   DOM.tableStocks,
+        errorEl:   DOM.errorStocks,
+        label:     'Acciones ARG'
+      },
+      cedears: {
+        url:       API.cedears,
+        tableEl:   DOM.tableCedears,
+        errorEl:   DOM.errorCedears,
+        label:     'CEDears'
+      }
+    };
+
+    /* Columnas de la tabla: { key, label, align, optional }
+       optional=true -> se oculta en mobile con clase col-optional  */
+    var COLUMNS = [
+      { key: 'symbol',  label: 'Símbolo',   align: 'left',  optional: false },
+      { key: 'last',    label: 'Último',     align: 'right', optional: false },
+      { key: 'change',  label: 'Var %',      align: 'right', optional: false },
+      { key: 'volume',  label: 'Volumen',    align: 'right', optional: true  },
+      { key: 'bid',     label: 'Compra',     align: 'right', optional: true  },
+      { key: 'ask',     label: 'Venta',      align: 'right', optional: true  },
+    ];
+
+
+    /* ------------------------------------------------------------
+       HELPERS DE FORMATO
+    ------------------------------------------------------------ */
+
+    /** Formatea un numero como precio: 1234567.89 -> "1.234.567,89" */
+    function fmtPrice(val) {
+      var n = parseFloat(val);
+      if (isNaN(n)) { return '<span class="var-neutral">—</span>'; }
+      return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    /** Formatea variacion porcentual con signo y clase de color */
+    function fmtChange(val) {
+      var n = parseFloat(val);
+      if (isNaN(n)) { return '<span class="var-neutral">—</span>'; }
+      var sign  = n > 0 ? '+' : '';
+      var cls   = n > 0 ? 'var-positive' : n < 0 ? 'var-negative' : 'var-neutral';
+      var arrow = n > 0 ? '▲' : n < 0 ? '▼' : '▸';
+      return '<span class="' + cls + '">' + arrow + ' ' + sign + n.toFixed(2) + '%</span>';
+    }
+
+    /** Formatea volumen: 1234567 -> "1.234.567" */
+    function fmtVolume(val) {
+      var n = parseInt(val, 10);
+      if (isNaN(n) || n === 0) { return '<span class="var-neutral">—</span>'; }
+      return n.toLocaleString('es-AR');
+    }
+
+    /** Extrae el valor de un objeto de la API segun posibles nombres de campo */
+    function getField(obj, keys) {
+      for (var i = 0; i < keys.length; i++) {
+        if (obj[keys[i]] !== undefined && obj[keys[i]] !== null && obj[keys[i]] !== '') {
+          return obj[keys[i]];
+        }
+      }
+      return null;
+    }
+
+    /**
+     * Normaliza un item crudo de la API a un objeto estandar.
+     * La API de data912 puede usar distintos nombres de campo
+     * segun el endpoint, por eso buscamos multiples variantes.
+     */
+    function normalizeItem(raw) {
+      return {
+        symbol: getField(raw, ['symbol', 'ticker', 'simbolo', 'id'])     || '—',
+        last:   getField(raw, ['last', 'ultimo', 'close', 'price', 'c']) || null,
+        change: getField(raw, ['variacion', 'change', 'pct_change', 'var', 'changePercent', 'variation', 'd']) || null,
+        volume: getField(raw, ['volume', 'volumen', 'vol', 'v'])          || null,
+        bid:    getField(raw, ['bid', 'compra', 'px_bid'])                || null,
+        ask:    getField(raw, ['ask', 'venta', 'oferta', 'px_ask'])       || null,
+      };
+    }
+
+
+    /* ------------------------------------------------------------
+       SKELETON LOADER
+       Muestra filas animadas mientras los datos cargan
+    ------------------------------------------------------------ */
+
+    function showSkeleton(tableEl) {
+      var SKELETON_ROWS = 12;
+      var html = '<table class="market-table">';
+
+      // Header con las mismas columnas
+      html += '<thead><tr>';
+      COLUMNS.forEach(function(col) {
+        var optClass = col.optional ? ' col-optional' : '';
+        html += '<th class="' + optClass + '">' + col.label + '</th>';
+      });
+      html += '</tr></thead><tbody>';
+
+      // Filas skeleton
+      for (var i = 0; i < SKELETON_ROWS; i++) {
+        html += '<tr>';
+        COLUMNS.forEach(function(col, idx) {
+          var optClass = col.optional ? ' col-optional' : '';
+          // Anchos variados para que se vea natural
+          var widths = ['60px','50px','55px','70px','50px','50px'];
+          html += '<td class="' + optClass + '">'
+               +  '<div class="skeleton" style="height:12px;width:' + widths[idx] + '"></div>'
+               +  '</td>';
+        });
+        html += '</tr>';
+      }
+
+      html += '</tbody></table>';
+      tableEl.innerHTML = html;
+      tableEl.classList.remove('hidden');
+    }
+
+
+    /* ------------------------------------------------------------
+       MOSTRAR ERROR
+    ------------------------------------------------------------ */
+
+    function showError(section, message) {
+      // Limpiar skeleton
+      section.tableEl.innerHTML = '';
+
+      // Construir mensaje de error
+      section.errorEl.innerHTML =
+        '<div class="toast-error flex items-start gap-3 px-5 py-4">'
+        + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" '
+        +   'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+        +   'stroke-linejoin="round" class="shrink-0 mt-0.5 opacity-70">'
+        +   '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
+        +   '<line x1="12" y1="16" x2="12.01" y2="16"/>'
+        + '</svg>'
+        + '<div>'
+        +   '<p class="font-display text-[11px] tracking-wide uppercase font-semibold mb-1">'
+        +     'Error al cargar ' + section.label
+        +   '</p>'
+        +   '<p class="text-[12px] opacity-70 font-body">' + message + '</p>'
+        +   '<button onclick="retrySection(this)" '
+        +     'data-section-key="' + getSectionKey(section) + '" '
+        +     'class="mt-3 font-display text-[10px] tracking-[0.1em] uppercase '
+        +     'border border-current px-3 py-1.5 rounded-sm opacity-70 hover:opacity-100 '
+        +     'transition-opacity">'
+        +     'Reintentar'
+        +   '</button>'
+        + '</div>'
+        + '</div>';
+
+      section.errorEl.classList.remove('hidden');
+    }
+
+    /** Obtiene la key de una seccion a partir del objeto */
+    function getSectionKey(section) {
+      var keys = Object.keys(SECTIONS);
+      for (var i = 0; i < keys.length; i++) {
+        if (SECTIONS[keys[i]] === section) { return keys[i]; }
+      }
+      return '';
+    }
+
+    /** Boton reintentar: vuelve a fetchear esa seccion */
+    function retrySection(btn) {
+      var key = btn.dataset.sectionKey;
+      if (SECTIONS[key]) {
+        SECTIONS[key].errorEl.classList.add('hidden');
+        SECTIONS[key].errorEl.innerHTML = '';
+        loadSection(key);
+      }
+    }
+
+
+    /* ------------------------------------------------------------
+       RENDER DE TABLA
+       Construye el HTML de la tabla con los datos normalizados
+    ------------------------------------------------------------ */
+
+    function renderTable(section, items) {
+      if (!items || items.length === 0) {
+        section.tableEl.innerHTML =
+          '<div class="px-6 py-12 text-center font-display text-[11px] '
+          + 'tracking-widest uppercase text-[#1e3a52]">Sin datos disponibles</div>';
+        return;
+      }
+
+      var html = '<table class="market-table"><thead><tr>';
+
+      // Cabeceras
+      COLUMNS.forEach(function(col) {
+        var optClass  = col.optional ? ' col-optional' : '';
+        var alignClass = col.align === 'right' ? ' text-right' : '';
+        html += '<th class="sortable' + optClass + alignClass
+             +  '" data-key="' + col.key + '">'
+             +  col.label
+             +  '<span class="sort-icon">⇅</span>'
+             +  '</th>';
+      });
+
+      html += '</tr></thead><tbody>';
+
+      // Filas de datos
+      items.forEach(function(raw) {
+        var item = normalizeItem(raw);
+        html += '<tr>';
+        html += '<td class="col-symbol">' + item.symbol + '</td>';
+        html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
+        html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
+        html += '<td class="text-right font-data col-optional">' + fmtVolume(item.volume) + '</td>';
+        html += '<td class="text-right font-data col-optional">' + fmtPrice(item.bid) + '</td>';
+        html += '<td class="text-right font-data col-optional">' + fmtPrice(item.ask) + '</td>';
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      section.tableEl.innerHTML = html;
+    }
+
+
+    /* ------------------------------------------------------------
+       FETCH DE DATOS
+       Llama a la API, normaliza y renderiza. Maneja errores.
+    ------------------------------------------------------------ */
+
+    function loadSection(key) {
+      var section = SECTIONS[key];
+      if (!section) { return; }
+
+      // Limpiar error previo
+      section.errorEl.classList.add('hidden');
+      section.errorEl.innerHTML = '';
+
+      // Mostrar skeleton mientras carga
+      showSkeleton(section.tableEl);
+
+      fetch(section.url)
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ' — ' + response.statusText);
+          }
+          return response.json();
+        })
+        .then(function(data) {
+          // La API puede devolver el array directamente o dentro de una propiedad
+          var items = Array.isArray(data) ? data
+                    : data.data   ? data.data
+                    : data.items  ? data.items
+                    : data.result ? data.result
+                    : [];
+
+          renderTable(section, items);
+
+          console.info(
+            '%c LV Capital %c ' + key + ' -> ' + items.length + ' instrumentos',
+            'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
+            'color:#3d5a73'
+          );
+        })
+        .catch(function(err) {
+          console.error('[LV Capital] Error cargando ' + key + ':', err.message);
+          showError(section, err.message || 'No se pudo conectar con data912.com');
+        });
+    }
+
+    /** Carga todas las secciones en paralelo */
+    function loadAllSections() {
+      Object.keys(SECTIONS).forEach(function(key) {
+        loadSection(key);
+      });
+    }
+
+
+    /* ------------------------------------------------------------
+       INICIALIZACION
+    ------------------------------------------------------------ */
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initTabs();
+      loadAllSections();    // PASO 3: carga inicial de datos
+      // initCountdown()    <- PASO 5
+      // initAutoRefresh()  <- PASO 5
+    });
+
   </script>
 
 </body>
