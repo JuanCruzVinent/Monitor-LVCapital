@@ -1812,49 +1812,42 @@
      * Filtra los items crudos por lista de tickers.
      */
     function renderBondSubsections(allItems) {
-      // Subsección Ley NY
       var nySection = {
-        tableEl:  document.getElementById('table-bonds-ny'),
-        errorEl:  document.getElementById('error-bonds-ny'),
-        statsEl:  null,
-        sortKey:  null,
-        sortDir:  'asc',
-        rawData:  null,
-        label:    'Ley NY'
+        tableEl: document.getElementById('table-bonds-ny'),
+        errorEl: document.getElementById('error-bonds-ny'),
+        statsEl: null, sortKey: null, sortDir: 'asc', rawData: null, label: 'Ley NY'
       };
-
-      // Subsección Ley ARG
       var argSection = {
-        tableEl:  document.getElementById('table-bonds-arg'),
-        errorEl:  document.getElementById('error-bonds-arg'),
-        statsEl:  null,
-        sortKey:  null,
-        sortDir:  'asc',
-        rawData:  null,
-        label:    'Ley ARG'
+        tableEl: document.getElementById('table-bonds-arg'),
+        errorEl: document.getElementById('error-bonds-arg'),
+        statsEl: null, sortKey: null, sortDir: 'asc', rawData: null, label: 'Ley ARG'
+      };
+      var subsovSection = {
+        tableEl:  document.getElementById('table-subsov'),
+        errorEl:  document.getElementById('error-subsov'),
+        statsEl:  document.getElementById('stats-subsov'),
+        sortKey:  null, sortDir: 'asc', rawData: null,
+        label:    'Subsoberanos', isSubsov: true
       };
 
-      // Filtrar por tickers (case-insensitive)
-      var nyItems  = allItems.filter(function(item) {
-        var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
-        return BONDS_NY.indexOf(sym) !== -1;
-      });
+      function filterBy(arr) {
+        return allItems.filter(function(item) {
+          var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
+          return arr.indexOf(sym) !== -1;
+        });
+      }
 
-      var argItems = allItems.filter(function(item) {
-        var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
-        return BONDS_ARG.indexOf(sym) !== -1;
-      });
+      nySection.rawData     = filterBy(BONDS_NY);
+      argSection.rawData    = filterBy(BONDS_ARG);
+      subsovSection.rawData = filterBy(BONDS_SUBSOV);
 
-      // Guardar rawData y renderizar
-      nySection.rawData  = nyItems;
-      argSection.rawData = argItems;
+      window._bondNySection     = nySection;
+      window._bondArgSection    = argSection;
+      window._bondSubsovSection = subsovSection;
 
-      // Guardar en window para que el sort pueda accederlos
-      window._bondNySection  = nySection;
-      window._bondArgSection = argSection;
-
-      renderBondsTable(nySection,  nyItems);
-      renderBondsTable(argSection, argItems);
+      renderBondsTable(nySection,     nySection.rawData);
+      renderBondsTable(argSection,    argSection.rawData);
+      renderBondsTable(subsovSection, subsovSection.rawData);
     }
 
     /** Carga todas las secciones en paralelo */
