@@ -106,15 +106,58 @@
       scroll-behavior: smooth;
     }
 
+    /* ── Variables de tema: dark (default) ── */
+    :root {
+      --bg-base:       #0a1520;
+      --bg-surface:    #0f1e2d;
+      --bg-card:       #132333;
+      --bg-hover:      #172b40;
+      --border-subtle: #172b40;
+      --border-def:    #1e3a52;
+      --text-primary:  #dce8f2;
+      --text-secondary:#86afce;
+      --text-muted:    #3d5a73;
+      --table-head-bg: #0d1a27;
+      --table-row-sep: #111f2e;
+      --col-symbol-color: #86afce;
+      --header-bg:     rgba(10,21,32,0.96);
+      --eyebrow-color: #0d5184;
+      --section-eye-color: #1e3a52;
+    }
+
+    /* ── Variables de tema: light ── */
+    html.light {
+      --bg-base:       #f0f4f8;
+      --bg-surface:    #ffffff;
+      --bg-card:       #ffffff;
+      --bg-hover:      #dce8f2;
+      --border-subtle: #c8d9e8;
+      --border-def:    #a8c0d4;
+      --text-primary:  #172b40;
+      --text-secondary:#0d5184;
+      --text-muted:    #5a7a94;
+      --table-head-bg: #e4eef6;
+      --table-row-sep: #d4e4f0;
+      --col-symbol-color: #0d5184;
+      --header-bg:     rgba(240,244,248,0.96);
+      --eyebrow-color: #0d5184;
+      --section-eye-color: #5a7a94;
+    }
+
     body {
       font-family: 'Source Sans 3', 'Helvetica Neue', sans-serif;
-      color: #dce8f2;
-      background-color: #0a1520;
+      color: var(--text-primary);
+      background-color: var(--bg-base);
       min-height: 100dvh;
-      /* Degradado radial sutil desde el azul LV en el top */
+      transition: background-color 0.3s ease, color 0.3s ease;
       background-image:
-        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.18), transparent),
-        radial-gradient(ellipse 40% 60% at 95% 50%, rgba(23,43,64,0.25), transparent);
+        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.10), transparent),
+        radial-gradient(ellipse 40% 60% at 95% 50%, rgba(23,43,64,0.12), transparent);
+    }
+
+    html.light body {
+      background-image:
+        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.05), transparent);
     }
 
     /* ── Scrollbar ── */
@@ -174,8 +217,9 @@
     .table-wrapper {
       overflow-x: auto;
       border-radius: 6px;
-      border: 1px solid #172b40;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(134,175,206,0.06);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(134,175,206,0.06);
+      transition: border-color 0.3s ease;
     }
 
     /* ── Tabla base ── */
@@ -187,8 +231,8 @@
     }
 
     .market-table thead th {
-      background: #0d1a27;
-      color: #3d5a73;
+      background: var(--table-head-bg);
+      color: var(--text-muted);
       font-size: 0.625rem;  /* 10px */
       font-weight: 600;
       text-transform: uppercase;
@@ -212,16 +256,16 @@
     .market-table thead th.sorted .sort-icon { opacity: 1; color: #86afce; }
 
     .market-table tbody tr {
-      border-bottom: 1px solid #111f2e;
+      border-bottom: 1px solid var(--table-row-sep);
       transition: background 0.12s ease;
     }
     .market-table tbody tr:last-child { border-bottom: none; }
-    .market-table tbody tr:hover      { background: #172b40; }
+    .market-table tbody tr:hover      { background: var(--bg-hover); }
 
     .market-table tbody td {
       padding: 11px 18px;
       white-space: nowrap;
-      color: #dce8f2;
+      color: var(--text-primary);
     }
 
     /* ── Símbolo (primera columna) ── */
@@ -230,7 +274,7 @@
       font-weight: 600;
       font-size: 0.75rem;
       letter-spacing: 0.06em;
-      color: #86afce !important;
+      color: var(--col-symbol-color) !important;
     }
 
     /* ── Variación ── */
@@ -299,7 +343,7 @@
       font-weight: 700;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: #0d5184;
+      color: var(--eyebrow-color);
       margin-bottom: 4px;
     }
 
@@ -397,6 +441,38 @@
             </svg>
             <span class="hidden sm:inline">GitHub</span>
           </a>
+
+          <!-- Botón toggle dark/light mode -->
+          <button
+            id="btn-theme"
+            title="Cambiar tema"
+            aria-label="Cambiar entre modo oscuro y claro"
+            class="flex items-center justify-center w-8 h-8 rounded-sm
+                   border border-[#1e3a52] bg-transparent
+                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
+                   hover:bg-[#172b40]/40
+                   transition-all duration-200"
+          >
+            <!-- Ícono sol (modo claro) -->
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="hidden">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <!-- Ícono luna (modo oscuro) -->
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
 
           <!-- Botón refresh -->
           <button
@@ -1573,11 +1649,10 @@
 
       // Columnas especificas para bonos (incluye TIR)
       var BOND_COLS = [
-        { key:'symbol', label:'Símbolo', align:'left',  optional:false, isTir:false },
-        { key:'last',   label:'Precio',  align:'right', optional:false, isTir:false },
+        { key:'symbol', label:'Símbolo',  align:'left',  optional:false, isTir:false },
+        { key:'last',   label:'Precio',   align:'right', optional:false, isTir:false },
         { key:'tir',    label:'TIR est.', align:'right', optional:false, isTir:true  },
-        { key:'change', label:'Var %',   align:'right', optional:false, isTir:false },
-        { key:'volume', label:'Nominal', align:'right', optional:true,  isTir:false },
+        { key:'change', label:'Var %',    align:'right', optional:false, isTir:false },
       ];
 
       var html = '<table class="market-table"><thead><tr>';
@@ -1613,7 +1688,6 @@
         html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
         html += '<td class="text-right font-data">' + fmtYTM(item.symbol, item.last) + '</td>';
         html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
-        html += '<td class="text-right font-data col-optional">' + fmtVolume(item.volume) + '</td>';
         html += '</tr>';
       });
 
@@ -1875,7 +1949,45 @@
        INICIALIZACION COMPLETA
     ------------------------------------------------------------ */
 
+    /* ------------------------------------------------------------
+       MODO CLARO / OSCURO
+    ------------------------------------------------------------ */
+    function initTheme() {
+      var html     = document.documentElement;
+      var btnTheme = document.getElementById('btn-theme');
+      var iconSun  = document.getElementById('icon-sun');
+      var iconMoon = document.getElementById('icon-moon');
+
+      // Leer preferencia guardada o usar dark por defecto
+      var saved = localStorage.getItem('lv-theme') || 'dark';
+      applyTheme(saved);
+
+      if (btnTheme) {
+        btnTheme.addEventListener('click', function() {
+          var current = html.classList.contains('light') ? 'light' : 'dark';
+          var next    = current === 'dark' ? 'light' : 'dark';
+          applyTheme(next);
+          localStorage.setItem('lv-theme', next);
+        });
+      }
+
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          html.classList.remove('dark');
+          html.classList.add('light');
+          if (iconSun)  { iconSun.classList.add('hidden'); }
+          if (iconMoon) { iconMoon.classList.remove('hidden'); }
+        } else {
+          html.classList.remove('light');
+          html.classList.add('dark');
+          if (iconSun)  { iconSun.classList.remove('hidden'); }
+          if (iconMoon) { iconMoon.classList.add('hidden'); }
+        }
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      initTheme();          // Tema claro/oscuro
       initTabs();           // Paso 2: navegacion por tabs
       loadAllSections();    // Paso 3: carga inicial de datos
       updateClock();        // Paso 5: mostrar hora actual
