@@ -668,6 +668,22 @@
           </button>
         </li>
 
+        <!-- Tab 5: Subsoberanos -->
+        <li role="presentation">
+          <button
+            id="tab-subsov"
+            role="tab"
+            aria-controls="section-subsov"
+            aria-selected="false"
+            data-target="section-subsov"
+            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
+                   px-5 py-4 whitespace-nowrap
+                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
+          >
+            Subsoberanos
+          </button>
+        </li>
+
       </ul>
     </div>
   </nav>
@@ -827,6 +843,30 @@
 
       <div id="table-cedears" class="table-wrapper min-h-[220px]"></div>
       <div id="error-cedears" class="hidden mt-3"></div>
+    </section>
+
+    <!-- ── SECCIÓN 5: Subsoberanos ── -->
+    <section
+      id="section-subsov"
+      role="tabpanel"
+      aria-labelledby="tab-subsov"
+      class="tab-section"
+    >
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Renta Fija · Provincial</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
+            Subsoberanos
+          </h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">
+            Bonos provinciales en dólares · Ley extranjera.
+          </p>
+        </div>
+        <div id="stats-subsov" class="hidden sm:flex items-center gap-3 text-right"></div>
+      </div>
+      <div class="lv-divider mb-5"></div>
+      <div id="table-subsov" class="table-wrapper min-h-[220px]"></div>
+      <div id="error-subsov" class="hidden mt-3"></div>
     </section>
 
   </main>
@@ -1804,8 +1844,9 @@
        BONOS SOBERANOS: filtros por Ley
        Los tickers se filtran del endpoint arg_bonds
     ---------------------------------------------------------- */
-    var BONDS_NY  = ['GD29D','GD30D','GD35D','GD38D','GD41D'];
-    var BONDS_ARG = ['AO27D','AL29D','AN29D','AL30D','AL35D','AE38D','AL41D'];
+    var BONDS_NY     = ['GD29D','GD30D','GD35D','GD38D','GD41D'];
+    var BONDS_ARG    = ['AO27D','AL29D','AN29D','AL30D','AL35D','AE38D','AL41D'];
+    var BONDS_SUBSOV = ['CO26D','S24DD','PM29D','NDT5D','CO32D','BC33D','SFD4D','BA7DD'];
 
     /**
      * Renderiza las dos sub-tablas de bonos soberanos.
@@ -2075,6 +2116,9 @@
     document.addEventListener('DOMContentLoaded', function() {
       initTheme();          // Tema claro/oscuro
       initTabs();           // Paso 2: navegacion por tabs
+      subsovSection.tableEl = document.getElementById('table-subsov');
+      subsovSection.errorEl = document.getElementById('error-subsov');
+      subsovSection.statsEl = document.getElementById('stats-subsov');
       loadAllSections();    // Paso 3: carga inicial de datos
       updateClock();        // Paso 5: mostrar hora actual
       startAutoRefresh();   // Paso 5: programar auto-refresh
