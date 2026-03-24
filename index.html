@@ -1,866 +1,375 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <!-- ============================================================
-       META & CHARSET
-  ============================================================ -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="LV Capital · Monitor de mercados argentinos: bonos soberanos, letras, acciones y CEDears." />
+  <meta name="description" content="LV Capital · Monitor de mercados argentinos y globales." />
   <title>LV Capital · Monitor de Mercados</title>
 
-  <!-- ============================================================
-       TAILWIND CSS (CDN)
-  ============================================================ -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    /* ── Tailwind config: paleta LV Capital ── */
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          colors: {
-            /* ── Paleta LV Capital (BrandBook) ── */
-            'lv-navy':       '#172b40',   /* Azul primario */
-            'lv-navy-dark':  '#0f1e2d',   /* Más oscuro para fondos */
-            'lv-navy-deep':  '#0a1520',   /* Base máxima */
-            'lv-blue':       '#0d5184',   /* Azul institucional secundario */
-            'lv-steel':      '#86afce',   /* Acero / acento claro */
-            'lv-ice':        '#dce8f2',   /* Celeste muy claro / texto sobre oscuro */
-            'lv-charcoal':   '#404041',   /* Gris oscuro */
-
-            /* ── Fondos ── */
-            'bg-base':      '#0a1520',
-            'bg-surface':   '#0f1e2d',
-            'bg-card':      '#132333',
-            'bg-hover':     '#172b40',
-
-            /* ── Bordes ── */
-            'border-subtle':  '#172b40',
-            'border-default': '#1e3a52',
-
-            /* ── Texto ── */
-            'text-primary':   '#dce8f2',
-            'text-secondary': '#86afce',
-            'text-muted':     '#3d5a73',
-
-            /* ── Acentos funcionales ── */
-            'accent-main':    '#86afce',   /* Acento LV principal */
-            'accent-strong':  '#0d5184',   /* Acento fuerte */
-            'positive':       '#4db88a',   /* Verde financiero (neutro) */
-            'negative':       '#e05c5c',   /* Rojo (tonalidad apagada) */
-            'warning':        '#c9943a',
-          },
           fontFamily: {
-            /* Display/identidad: espaciado generoso, geométrica */
-            display: ['"Raleway"', '"Helvetica Neue"', 'sans-serif'],
-            /* Body: lectura limpia */
-            body:    ['"Source Sans 3"', '"Helvetica Neue"', 'sans-serif'],
-            /* Data: números en tablas */
-            data:    ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace'],
-          },
-          boxShadow: {
-            'glow-steel': '0 0 16px 0 rgba(134,175,206,0.15)',
-            'glow-card':  '0 4px 32px 0 rgba(0,0,0,0.50)',
-            'inner-top':  'inset 0 1px 0 rgba(134,175,206,0.08)',
+            display: ['"Raleway"', 'sans-serif'],
+            body:    ['"Source Sans 3"', 'sans-serif'],
+            data:    ['"JetBrains Mono"', 'monospace'],
           },
           animation: {
-            'fade-in':   'fadeIn 0.4s ease forwards',
-            'slide-up':  'slideUp 0.4s ease forwards',
-            'spin-slow': 'spin 1.8s linear infinite',
-            'pulse-dot': 'pulseDot 2.5s ease-in-out infinite',
+            'slide-up': 'slideUp 0.35s ease forwards',
+            'pulse-dot':'pulseDot 2.5s ease-in-out infinite',
           },
           keyframes: {
-            fadeIn:   { from: { opacity: 0 }, to: { opacity: 1 } },
-            slideUp:  { from: { opacity: 0, transform: 'translateY(8px)' },
-                        to:   { opacity: 1, transform: 'translateY(0)' } },
-            pulseDot: {
-              '0%, 100%': { opacity: 1,   transform: 'scale(1)' },
-              '50%':      { opacity: 0.3, transform: 'scale(0.75)' },
-            },
+            slideUp:  { from:{opacity:'0',transform:'translateY(8px)'}, to:{opacity:'1',transform:'translateY(0)'} },
+            pulseDot: { '0%,100%':{opacity:'1',transform:'scale(1)'}, '50%':{opacity:'0.3',transform:'scale(0.75)'} },
           },
         },
       },
     };
   </script>
 
-  <!-- ============================================================
-       GOOGLE FONTS
-       Raleway (display) · Source Sans 3 (body) · JetBrains Mono (data)
-  ============================================================ -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- ============================================================
-       ESTILOS GLOBALES
-  ============================================================ -->
   <style>
     *, *::before, *::after { box-sizing: border-box; }
+    html { background-color: #0a1520; scroll-behavior: smooth; }
 
-    html {
-      background-color: #0a1520;
-      scroll-behavior: smooth;
-    }
-
-    /* ── Variables de tema: dark (default) ── */
+    /* CSS Variables - Dark (default) */
     :root {
-      --bg-base:       #0a1520;
-      --bg-surface:    #0f1e2d;
-      --bg-card:       #132333;
-      --bg-hover:      #172b40;
-      --border-subtle: #172b40;
-      --border-def:    #1e3a52;
-      --text-primary:  #dce8f2;
+      --bg-base:      #0a1520;
+      --bg-surface:   #0f1e2d;
+      --bg-card:      #132333;
+      --bg-hover:     #172b40;
+      --border-subtle:#172b40;
+      --border-def:   #1e3a52;
+      --text-primary: #dce8f2;
       --text-secondary:#86afce;
-      --text-muted:    #3d5a73;
-      --table-head-bg: #0d1a27;
-      --table-row-sep: #111f2e;
-      --col-symbol-color: #86afce;
-      --header-bg:     rgba(10,21,32,0.96);
-      --eyebrow-color: #0d5184;
-      --section-eye-color: #1e3a52;
+      --text-muted:   #3d5a73;
+      --table-head:   #0d1a27;
+      --table-sep:    #111f2e;
+      --sym-color:    #86afce;
+      --eyebrow:      #0d5184;
     }
-
-    /* ── Variables de tema: light ── */
+    /* CSS Variables - Light */
     html.light {
-      --bg-base:          #f0f4f8;
-      --bg-surface:       #ffffff;
-      --bg-card:          #ffffff;
-      --bg-hover:         #dce8f2;
-      --border-subtle:    #c8d9e8;
-      --border-def:       #a8c0d4;
-      --text-primary:     #172b40;
-      --text-secondary:   #0d5184;
-      --text-muted:       #5a7a94;
-      --table-head-bg:    #e4eef6;
-      --table-row-sep:    #d4e4f0;
-      --col-symbol-color: #0d5184;
-      --header-bg:        rgba(240,244,248,0.96);
-      --eyebrow-color:    #0d5184;
-      --section-eye-color:#5a7a94;
+      --bg-base:      #f0f4f8;
+      --bg-surface:   #ffffff;
+      --bg-card:      #ffffff;
+      --bg-hover:     #dce8f2;
+      --border-subtle:#c8d9e8;
+      --border-def:   #a8c0d4;
+      --text-primary: #172b40;
+      --text-secondary:#0d5184;
+      --text-muted:   #5a7a94;
+      --table-head:   #e4eef6;
+      --table-sep:    #d4e4f0;
+      --sym-color:    #0d5184;
+      --eyebrow:      #0d5184;
     }
-
-    /* ── Light mode: overrides para elementos con colores hardcodeados ── */
-
-    /* Header y nav */
-    html.light header,
-    html.light nav#market-tabs {
-      background-color: rgba(240,244,248,0.96) !important;
-      border-color: #c8d9e8 !important;
-    }
-
-    /* Logo wordmark */
-    html.light .lv-wordmark-primary   { color: #172b40 !important; }
-    html.light .lv-wordmark-secondary { color: #5a7a94 !important; }
-
-    /* Separadores en header */
-    html.light .lv-sep { background-color: #c8d9e8 !important; }
-
-    /* Texto general hardcodeado */
-    html.light [class*="text-[#dce8f2]"]  { color: #172b40 !important; }
-    html.light [class*="text-[#3d5a73]"]  { color: #5a7a94 !important; }
-    html.light [class*="text-[#1e3a52]"]  { color: #7a9ab4 !important; }
-    html.light [class*="text-[#172b40]"]  { color: #5a7a94 !important; }
-    html.light [class*="text-[#86afce]"]  { color: #0d5184 !important; }
-
-    /* Fondos hardcodeados */
-    html.light [class*="bg-[#0a1520]"]  { background-color: #f0f4f8 !important; }
-    html.light [class*="bg-[#0f1e2d]"]  { background-color: #ffffff !important; }
-    html.light [class*="bg-[#172b40]"]  { background-color: #dce8f2 !important; }
-    html.light [class*="bg-[#0d1a27]"]  { background-color: #e4eef6 !important; }
-    html.light [class*="bg-[#132333]"]  { background-color: #f5f8fb !important; }
-
-    /* Bordes hardcodeados */
-    html.light [class*="border-[#172b40]"] { border-color: #c8d9e8 !important; }
-    html.light [class*="border-[#1e3a52]"] { border-color: #a8c0d4 !important; }
-    html.light [class*="border-[#0d5184]"] { border-color: #0d5184 !important; }
-
-    /* Botones del header */
-    html.light .header-btn {
-      border-color: #a8c0d4 !important;
-      color: #5a7a94 !important;
-    }
-    html.light .header-btn:hover {
-      border-color: #0d5184 !important;
-      color: #0d5184 !important;
-      background-color: rgba(13,81,132,0.08) !important;
-    }
-
-    /* Tabs */
-    html.light .tab-btn.active         { color: #172b40 !important; }
-    html.light .tab-btn:not(.active)   { color: #7a9ab4 !important; }
-    html.light .tab-btn:not(.active):hover { color: #172b40 !important; background: rgba(13,81,132,0.05) !important; }
-    html.light .tab-indicator          { background: #0d5184 !important; box-shadow: 0 0 8px rgba(13,81,132,0.3) !important; }
-
-    /* Badges */
-    html.light .badge-open  { background: rgba(13,81,132,0.10) !important; color: #0d5184 !important; border-color: rgba(13,81,132,0.25) !important; }
-    html.light .badge-close { background: rgba(90,122,148,0.10) !important; color: #5a7a94 !important; }
-
-    /* Live dot */
-    html.light .live-dot { background: #0d5184 !important; box-shadow: 0 0 7px rgba(13,81,132,0.6) !important; }
-
-    /* Sub-sección badge NY/ARG */
-    html.light .badge-ny  { background: rgba(13,81,132,0.12) !important; border-color: rgba(13,81,132,0.3) !important; color: #0d5184 !important; }
-    html.light .badge-arg { background: rgba(23,43,64,0.08) !important; border-color: #c8d9e8 !important; color: #5a7a94 !important; }
-
-    /* Divisor LV */
-    html.light .lv-divider { background: linear-gradient(90deg, #dce8f2 0%, #0d5184 40%, #dce8f2 100%) !important; }
-
-    /* Footer */
-    html.light footer { border-color: #c8d9e8 !important; }
-
-    /* Tabla disclaimer footer */
-    html.light .table-disclaimer {
-      background-color: #e4eef6 !important;
-      border-color: #c8d9e8 !important;
-      color: #7a9ab4 !important;
-    }
-
-    /* Sort icon color en header activo */
-    html.light .market-table thead th.sorted .sort-icon { color: #0d5184 !important; }
-    html.light .market-table thead th.sortable:hover     { color: #172b40 !important; }
-
-    /* Scrollbar en light */
-    html.light ::-webkit-scrollbar-track { background: #f0f4f8; }
-    html.light ::-webkit-scrollbar-thumb { background: #a8c0d4; }
-    html.light ::-webkit-scrollbar-thumb:hover { background: #0d5184; }
-
-    /* TIR colors en light */
-    html.light .text-\[\#dce8f2\] { color: #172b40 !important; }
 
     body {
-      font-family: 'Source Sans 3', 'Helvetica Neue', sans-serif;
+      font-family: 'Source Sans 3', sans-serif;
       color: var(--text-primary);
       background-color: var(--bg-base);
       min-height: 100dvh;
       transition: background-color 0.3s ease, color 0.3s ease;
-      background-image:
-        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.10), transparent),
-        radial-gradient(ellipse 40% 60% at 95% 50%, rgba(23,43,64,0.12), transparent);
+      background-image: radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.10), transparent);
     }
+    html.light body { background-image: radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.04), transparent); }
 
-    html.light body {
-      background-image:
-        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.05), transparent);
-    }
+    ::-webkit-scrollbar { width:5px; height:5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border-def); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+    ::selection { background: rgba(134,175,206,0.25); color: var(--text-primary); }
 
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #0f1e2d; }
-    ::-webkit-scrollbar-thumb { background: #1e3a52; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #86afce; }
-
-    /* ── Selección ── */
-    ::selection { background: rgba(134,175,206,0.25); color: #dce8f2; }
-
-    /* ── Utilitarios de tipografía ── */
-    .font-display { font-family: 'Raleway', sans-serif; }
-    .font-data    { font-family: 'JetBrains Mono', monospace; }
-
-    /* ──────────────────────────────────────────────────────────
-       LOGO LV CAPITAL (SVG reconstruido del brandbook)
-    ────────────────────────────────────────────────────────── */
-    .lv-logo-mark {
-      /* El ícono geométrico del logo */
-      display: inline-block;
-    }
-
-    /* ── Tab: línea de acento ── */
+    /* ---- Tabs ---- */
     .tab-indicator {
-      position: absolute;
-      bottom: -1px;
-      left: 0; right: 0;
-      height: 2px;
-      background: #86afce;
-      border-radius: 2px 2px 0 0;
-      box-shadow: 0 0 10px rgba(134,175,206,0.5);
+      position:absolute; bottom:-1px; left:0; right:0; height:2px;
+      background:#86afce; border-radius:2px 2px 0 0;
+      box-shadow:0 0 10px rgba(134,175,206,0.5);
     }
+    html.light .tab-indicator { background:#0d5184; box-shadow:0 0 8px rgba(13,81,132,0.3); }
+    .tab-btn { position:relative; cursor:pointer; letter-spacing:0.06em; transition:color 0.2s, background 0.2s; }
+    .tab-btn.active { color:var(--text-primary); }
+    .tab-btn:not(.active) { color:var(--text-muted); }
+    .tab-btn:not(.active):hover { color:var(--text-secondary); background:rgba(134,175,206,0.04); }
+    .tab-section { display:none; }
+    .tab-section.active { display:block; animation:slideUp 0.35s ease forwards; }
 
-    /* ── Tab button ── */
-    .tab-btn {
-      position: relative;
-      cursor: pointer;
-      letter-spacing: 0.06em;
-      transition: color 0.2s ease, background 0.2s ease;
-    }
-    .tab-btn.active           { color: #dce8f2; }
-    .tab-btn:not(.active)     { color: #3d5a73; }
-    .tab-btn:not(.active):hover {
-      color: #86afce;
-      background: rgba(134,175,206,0.04);
-    }
-
-    /* ── Sección ── */
-    .tab-section { display: none; }
-    .tab-section.active {
-      display: block;
-      animation: slideUp 0.35s ease forwards;
-    }
-
-    /* ── Tabla wrapper ── */
-    .table-wrapper {
-      overflow-x: auto;
-      border-radius: 6px;
-      border: 1px solid var(--border-subtle);
-      box-shadow: 0 4px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(134,175,206,0.06);
-      transition: border-color 0.3s ease;
-    }
-
-    /* ── Tabla base ── */
-    .market-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8125rem;
-    }
-
+    /* ---- Tables ---- */
+    .table-wrapper { overflow-x:auto; border-radius:6px; border:1px solid var(--border-subtle); box-shadow:0 4px 32px rgba(0,0,0,0.15); }
+    .market-table { width:100%; border-collapse:collapse; font-family:'JetBrains Mono',monospace; font-size:0.8125rem; }
     .market-table thead th {
-      background: var(--table-head-bg);
-      color: var(--text-muted);
-      font-size: 0.625rem;  /* 10px */
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 11px 18px;
-      border-bottom: 1px solid #172b40;
-      white-space: nowrap;
-      user-select: none;
+      background:var(--table-head); color:var(--text-muted); font-size:0.625rem;
+      font-weight:600; text-transform:uppercase; letter-spacing:0.1em;
+      padding:11px 18px; border-bottom:1px solid var(--border-subtle); white-space:nowrap; user-select:none;
     }
+    .market-table thead th.sortable { cursor:pointer; transition:color 0.15s; }
+    .market-table thead th.sortable:hover { color:var(--text-primary); }
+    .market-table thead th .sort-icon { margin-left:4px; opacity:0.3; }
+    .market-table thead th.sorted .sort-icon { opacity:1; color:var(--text-secondary); }
+    .market-table tbody tr { border-bottom:1px solid var(--table-sep); transition:background 0.12s; }
+    .market-table tbody tr:last-child { border-bottom:none; }
+    .market-table tbody tr:hover { background:var(--bg-hover); }
+    .market-table tbody td { padding:11px 18px; white-space:nowrap; color:var(--text-primary); }
+    .col-symbol { font-family:'Raleway',sans-serif; font-weight:600; font-size:0.75rem; letter-spacing:0.06em; color:var(--sym-color) !important; }
 
-    .market-table thead th.sortable {
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .market-table thead th.sortable:hover { color: #86afce; }
-    .market-table thead th .sort-icon {
-      margin-left: 4px;
-      opacity: 0.3;
-      transition: opacity 0.15s;
-    }
-    .market-table thead th.sorted .sort-icon { opacity: 1; color: #86afce; }
+    /* ---- Colors ---- */
+    .var-positive { color:#4db88a; }
+    .var-negative { color:#e05c5c; }
+    .var-neutral  { color:var(--text-muted); }
 
-    .market-table tbody tr {
-      border-bottom: 1px solid var(--table-row-sep);
-      transition: background 0.12s ease;
-    }
-    .market-table tbody tr:last-child { border-bottom: none; }
-    .market-table tbody tr:hover      { background: var(--bg-hover); }
+    /* ---- Live dot ---- */
+    .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#86afce; box-shadow:0 0 7px rgba(134,175,206,0.9); animation:pulseDot 2.5s ease-in-out infinite; }
+    html.light .live-dot { background:#0d5184; box-shadow:0 0 7px rgba(13,81,132,0.6); }
 
-    .market-table tbody td {
-      padding: 11px 18px;
-      white-space: nowrap;
-      color: var(--text-primary);
-    }
+    /* ---- Skeleton ---- */
+    .skeleton { background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-hover) 50%,var(--bg-card) 75%); background-size:200% 100%; animation:shimmer 1.8s infinite; border-radius:3px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    /* ── Símbolo (primera columna) ── */
-    .col-symbol {
-      font-family: 'Raleway', sans-serif;
-      font-weight: 600;
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
-      color: var(--col-symbol-color) !important;
-    }
+    /* ---- Toast error ---- */
+    .toast-error { background:rgba(224,92,92,0.08); border:1px solid rgba(224,92,92,0.25); border-radius:6px; color:#e05c5c; }
 
-    /* ── Variación ── */
-    .var-positive { color: #4db88a; }
-    .var-negative { color: #e05c5c; }
-    .var-neutral  { color: #3d5a73; }
+    /* ---- Badges ---- */
+    .market-badge { display:inline-flex; align-items:center; gap:4px; font-size:0.5625rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; padding:2px 8px; border-radius:2px; }
+    .badge-open  { background:rgba(77,184,138,0.12); color:#4db88a; border:1px solid rgba(77,184,138,0.2); }
+    .badge-close { background:rgba(61,90,115,0.20); color:#3d5a73; border:1px solid rgba(61,90,115,0.3); }
+    html.light .badge-open { background:rgba(13,81,132,0.10); color:#0d5184; border-color:rgba(13,81,132,0.25); }
+    .badge-ny  { background:rgba(13,81,132,0.12); border:1px solid rgba(13,81,132,0.3); color:#86afce; }
+    .badge-arg { background:rgba(23,43,64,0.08); border:1px solid var(--border-subtle); color:var(--text-muted); }
+    html.light .badge-ny  { color:#0d5184; }
+    html.light .badge-arg { border-color:#c8d9e8; color:#5a7a94; }
 
-    /* ── Live dot ── */
-    .live-dot {
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #86afce;
-      box-shadow: 0 0 7px rgba(134,175,206,0.9);
-      animation: pulseDot 2.5s ease-in-out infinite;
-    }
+    /* ---- Decoratives ---- */
+    .section-eyebrow { display:inline-block; font-family:'Raleway',sans-serif; font-size:0.5625rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--eyebrow); margin-bottom:4px; }
+    .lv-divider { height:1px; background:linear-gradient(90deg,var(--bg-hover) 0%,#0d5184 40%,var(--bg-hover) 100%); }
 
-    /* ── Countdown bar ── */
-    .countdown-bar {
-      height: 1px;
-      background: linear-gradient(90deg, #0d5184, #86afce);
-      border-radius: 1px;
-      transition: width 1s linear;
-    }
+    /* ---- Header light ---- */
+    html.light header, html.light nav#market-tabs { background-color:rgba(240,244,248,0.96) !important; border-color:#c8d9e8 !important; }
+    html.light .lv-wordmark-primary  { color:#172b40 !important; }
+    html.light .lv-wordmark-secondary{ color:#5a7a94 !important; }
+    html.light .lv-sep { background-color:#c8d9e8 !important; }
+    html.light [class*="text-[#dce8f2]"] { color:#172b40 !important; }
+    html.light [class*="text-[#3d5a73]"] { color:#5a7a94 !important; }
+    html.light [class*="text-[#1e3a52]"] { color:#7a9ab4 !important; }
+    html.light [class*="text-[#86afce]"] { color:#0d5184 !important; }
+    html.light [class*="bg-[#172b40]"]   { background-color:#dce8f2 !important; }
+    html.light [class*="bg-[#0d1a27]"]   { background-color:#e4eef6 !important; }
+    html.light [class*="border-[#172b40]"]{ border-color:#c8d9e8 !important; }
+    html.light [class*="border-[#1e3a52]"]{ border-color:#a8c0d4 !important; }
+    html.light footer { border-color:#c8d9e8 !important; }
+    html.light .header-btn { border-color:#a8c0d4 !important; color:#5a7a94 !important; }
+    html.light .header-btn:hover { border-color:#0d5184 !important; color:#0d5184 !important; background-color:rgba(13,81,132,0.08) !important; }
+    html.light .lv-divider { background:linear-gradient(90deg,#dce8f2 0%,#0d5184 40%,#dce8f2 100%) !important; }
+    html.light ::-webkit-scrollbar-track { background:#f0f4f8; }
+    html.light ::-webkit-scrollbar-thumb { background:#a8c0d4; }
 
-    /* ── Skeleton ── */
-    .skeleton {
-      background: linear-gradient(90deg, #132333 25%, #172b40 50%, #132333 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.8s infinite;
-      border-radius: 3px;
+    /* ---- Global Market Cards ---- */
+    .market-card {
+      background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:8px;
+      padding:18px 20px; transition:background 0.15s, border-color 0.15s, transform 0.15s;
+      position:relative; overflow:hidden;
     }
-    @keyframes shimmer {
-      0%   { background-position:  200% 0; }
-      100% { background-position: -200% 0; }
+    .market-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--card-accent,#86afce); opacity:0; transition:opacity 0.2s; }
+    .market-card:hover { background:var(--bg-hover); border-color:var(--border-def); transform:translateY(-1px); }
+    .market-card:hover::before { opacity:1; }
+    .market-card .card-flag  { font-size:1.25rem; line-height:1; margin-bottom:10px; }
+    .market-card .card-name  { font-family:'Raleway',sans-serif; font-size:0.6875rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px; }
+    .market-card .card-label { font-size:0.72rem; color:var(--text-muted); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .market-card .card-price { font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:600; color:var(--text-primary); line-height:1.1; margin-bottom:5px; }
+    .market-card .card-change { font-family:'JetBrains Mono',monospace; font-size:0.78rem; font-weight:500; }
+    .market-card .card-change.positive { color:#4db88a; }
+    .market-card .card-change.negative { color:#e05c5c; }
+    .market-card .card-change.neutral  { color:var(--text-muted); }
+    html.light .market-card { background:#ffffff !important; border-color:#c8d9e8 !important; }
+    html.light .market-card:hover { background:#dce8f2 !important; border-color:#a8c0d4 !important; }
+    .market-card-skeleton {
+      border-radius:8px; min-height:140px; border:1px solid var(--border-subtle);
+      background:linear-gradient(90deg,var(--bg-card) 25%,var(--bg-hover) 50%,var(--bg-card) 75%);
+      background-size:200% 100%; animation:shimmer 1.8s infinite;
     }
+    html.light .market-card-skeleton { background:linear-gradient(90deg,#ffffff 25%,#dce8f2 50%,#ffffff 75%) !important; background-size:200% 100% !important; border-color:#c8d9e8 !important; }
 
-    /* ── Error toast ── */
-    .toast-error {
-      background: rgba(224,92,92,0.08);
-      border: 1px solid rgba(224,92,92,0.25);
-      border-radius: 6px;
-      color: #e05c5c;
-    }
-
-    /* ── Badge de mercado ── */
-    .market-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.5625rem; /* 9px */
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 2px;
-    }
-    .badge-open  { background: rgba(77,184,138,0.12);  color: #4db88a; border: 1px solid rgba(77,184,138,0.2); }
-    .badge-close { background: rgba(61,90,115,0.20);   color: #3d5a73; border: 1px solid rgba(61,90,115,0.3); }
-
-    /* ── Sección heading decorativo ── */
-    .section-eyebrow {
-      display: inline-block;
-      font-family: 'Raleway', sans-serif;
-      font-size: 0.5625rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--eyebrow-color);
-      margin-bottom: 4px;
-    }
-
-    /* ── Divisor con gradiente LV ── */
-    .lv-divider {
-      height: 1px;
-      background: linear-gradient(90deg, #172b40 0%, #0d5184 40%, #172b40 100%);
-    }
-
-    /* ── Responsive ── */
     @media (max-width: 640px) {
-      .col-optional { display: none; }
-      .market-table thead th,
-      .market-table tbody td { padding: 9px 12px; }
+      .col-optional { display:none; }
+      .market-table thead th, .market-table tbody td { padding:9px 12px; }
     }
   </style>
 </head>
 
-<!-- ============================================================
-     BODY
-============================================================ -->
 <body class="antialiased">
 
-  <!-- ============================================================
-       HEADER: Logo LV Capital + estado del mercado
-  ============================================================ -->
+  <!-- HEADER -->
   <header class="sticky top-0 z-50 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md">
     <div class="max-w-screen-xl mx-auto px-5 sm:px-8">
       <div class="flex items-center justify-between h-16">
-
-        <!-- ── Identidad: Logo SVG + wordmark ── -->
         <div class="flex items-center gap-4">
-
-          <!-- Logo mark: V sólida + bloque cuadrado (fiel al brandbook) -->
-          <div class="lv-logo-mark shrink-0">
+          <div class="shrink-0">
             <svg width="34" height="32" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Brazo izquierdo: banda diagonal ancha, top-left a bottom-center -->
               <polygon points="0,0 9,0 20,30 11,30" fill="#86afce"/>
-              <!-- Brazo derecho: sube del bottom-center hacia mid-right -->
               <polygon points="11,30 20,30 24,17 15,17" fill="#86afce"/>
-              <!-- Bloque cuadrado upper-right: acento institucional #0d5184 -->
               <rect x="21" y="0" width="13" height="13" fill="#0d5184"/>
             </svg>
           </div>
-
-          <!-- Wordmark -->
           <div class="flex flex-col leading-none">
-            <span class="lv-wordmark-primary font-display font-bold text-[#dce8f2] text-sm tracking-[0.22em] uppercase">
-              LV Capital
-            </span>
-            <span class="lv-wordmark-secondary font-display font-light text-[#3d5a73] text-[9px] tracking-[0.3em] uppercase mt-0.5">
-              Monitor de Mercados
-            </span>
+            <span class="lv-wordmark-primary font-display font-bold text-[#dce8f2] text-sm tracking-[0.22em] uppercase">LV Capital</span>
+            <span class="lv-wordmark-secondary font-display font-light text-[#3d5a73] text-[9px] tracking-[0.3em] uppercase mt-0.5">Monitor de Mercados</span>
           </div>
-
-          <!-- Separador -->
           <div class="lv-sep w-px h-8 bg-[#172b40] hidden sm:block mx-1"></div>
-          <!-- Sub-label -->
-          <span class="hidden sm:block font-display text-[#1e3a52] text-[10px] tracking-[0.15em] uppercase">
-            BYMA · ARG
-          </span>
+          <span class="hidden sm:block font-display text-[#1e3a52] text-[10px] tracking-[0.15em] uppercase">BYMA &middot; ARG</span>
         </div>
-
-        <!-- ── Estado: live + hora + badge + refresh ── -->
         <div class="flex items-center gap-3">
-
-          <!-- Live indicator + hora -->
-          <div class="flex items-center gap-2 text-[#3d5a73]">
-            <span class="live-dot" id="live-dot" title="Auto-actualización activa"></span>
-            <span class="font-data text-[11px] hidden sm:inline" id="last-update-time">--:--:--</span>
+          <div class="flex items-center gap-2">
+            <span class="live-dot" id="live-dot"></span>
+            <span class="font-data text-[11px] text-[#3d5a73] hidden sm:inline" id="last-update-time">--:--:--</span>
           </div>
-
-          <!-- Badge mercado -->
-          <span class="market-badge badge-open font-display" id="market-status-badge">
-            BYMA
-          </span>
-
-          <!-- Botón GitHub -->
-          <a
-            href="https://github.com/lvcapital/monitor-mercados"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Ver repositorio en GitHub"
-            aria-label="Repositorio GitHub"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-sm
-                   border border-[#1e3a52] bg-transparent
-                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
-                   hover:bg-[#172b40]/40
-                   transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase"
-          >
-            <!-- GitHub Octocat SVG (oficial, simplificado) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
-                 viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-            </svg>
+          <span class="market-badge badge-open font-display" id="market-status-badge">BYMA</span>
+          <button id="btn-theme" title="Cambiar tema" class="header-btn flex items-center justify-center w-8 h-8 rounded-sm border border-[#1e3a52] bg-transparent text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce] hover:bg-[#172b40]/40 transition-all duration-200">
+            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <a href="https://github.com/JuanCruzVinent/Monitor-LVCapital" target="_blank" rel="noopener noreferrer"
+            class="header-btn flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[#1e3a52] bg-transparent text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce] hover:bg-[#172b40]/40 transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
             <span class="hidden sm:inline">GitHub</span>
           </a>
-
-          <!-- Botón toggle dark/light mode -->
-          <button
-            id="btn-theme"
-            title="Cambiar tema"
-            aria-label="Cambiar entre modo oscuro y claro"
-            class="header-btn flex items-center justify-center w-8 h-8 rounded-sm
-                   border border-[#1e3a52] bg-transparent
-                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
-                   hover:bg-[#172b40]/40
-                   transition-all duration-200"
-          >
-            <!-- Ícono sol (modo claro) -->
-            <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                 class="hidden">
-              <circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-            </svg>
-            <!-- Ícono luna (modo oscuro) -->
-            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </button>
-
-          <!-- Botón refresh -->
-          <button
-            id="btn-refresh"
-            title="Actualizar ahora"
-            aria-label="Actualizar datos"
-            class="header-btn flex items-center gap-1.5 px-3 py-1.5 rounded-sm
-                   border border-[#1e3a52] bg-transparent
-                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
-                   hover:bg-[#172b40]/40
-                   transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase"
-          >
-            <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="11" height="11"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-              <path d="M21 3v5h-5"/>
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-              <path d="M8 16H3v5"/>
-            </svg>
+          <button id="btn-refresh" title="Actualizar ahora"
+            class="header-btn flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[#1e3a52] bg-transparent text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce] hover:bg-[#172b40]/40 transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase">
+            <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
             <span class="hidden sm:inline">Actualizar</span>
           </button>
         </div>
-
       </div>
     </div>
   </header>
-  <!-- /HEADER -->
 
-
-  <!-- ============================================================
-       NAVBAR DE TABS
-  ============================================================ -->
-  <nav
-    id="market-tabs"
-    role="tablist"
-    aria-label="Secciones del mercado"
-    class="sticky top-16 z-40 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md"
-  >
+  <!-- TABS -->
+  <nav id="market-tabs" role="tablist" class="sticky top-16 z-40 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md">
     <div class="max-w-screen-xl mx-auto px-5 sm:px-8">
       <ul class="flex overflow-x-auto -mb-px gap-0.5" role="list">
-
-        <!-- Tab 1: Bonos Soberanos -->
-        <li role="presentation">
-          <button
-            id="tab-bonds"
-            role="tab"
-            aria-controls="section-bonds"
-            aria-selected="true"
-            data-target="section-bonds"
-            class="tab-btn active font-display text-[10px] tracking-[0.12em] uppercase
-                   px-5 py-4 whitespace-nowrap
-                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
-          >
-            Bonos Soberanos
-            <span class="tab-indicator"></span>
-          </button>
-        </li>
-
-        <!-- Tab 2: Letras y Bonos Tasa Fija -->
-        <li role="presentation">
-          <button
-            id="tab-notes"
-            role="tab"
-            aria-controls="section-notes"
-            aria-selected="false"
-            data-target="section-notes"
-            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
-                   px-5 py-4 whitespace-nowrap
-                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
-          >
-            Letras &amp; T. Fija
-          </button>
-        </li>
-
-        <!-- Tab 3: Acciones Argentinas -->
-        <li role="presentation">
-          <button
-            id="tab-stocks"
-            role="tab"
-            aria-controls="section-stocks"
-            aria-selected="false"
-            data-target="section-stocks"
-            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
-                   px-5 py-4 whitespace-nowrap
-                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
-          >
-            Acciones ARG
-          </button>
-        </li>
-
-        <!-- Tab 4: CEDears -->
-        <li role="presentation">
-          <button
-            id="tab-cedears"
-            role="tab"
-            aria-controls="section-cedears"
-            aria-selected="false"
-            data-target="section-cedears"
-            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
-                   px-5 py-4 whitespace-nowrap
-                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
-          >
-            CEDears
-          </button>
-        </li>
-
-        <!-- Tab 5: Subsoberanos -->
-        <li role="presentation">
-          <button
-            id="tab-subsov"
-            role="tab"
-            aria-controls="section-subsov"
-            aria-selected="false"
-            data-target="section-subsov"
-            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
-                   px-5 py-4 whitespace-nowrap
-                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
-          >
-            Subsoberanos
-          </button>
-        </li>
-
+        <li role="presentation"><button id="tab-inicio" role="tab" aria-controls="section-inicio" aria-selected="true" data-target="section-inicio" class="tab-btn active font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">Inicio<span class="tab-indicator"></span></button></li>
+        <li role="presentation"><button id="tab-bonds" role="tab" aria-controls="section-bonds" aria-selected="false" data-target="section-bonds" class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">Bonos Soberanos</button></li>
+        <li role="presentation"><button id="tab-notes" role="tab" aria-controls="section-notes" aria-selected="false" data-target="section-notes" class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">Letras &amp; T. Fija</button></li>
+        <li role="presentation"><button id="tab-stocks" role="tab" aria-controls="section-stocks" aria-selected="false" data-target="section-stocks" class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">Acciones ARG</button></li>
+        <li role="presentation"><button id="tab-cedears" role="tab" aria-controls="section-cedears" aria-selected="false" data-target="section-cedears" class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">CEDears</button></li>
+        <li role="presentation"><button id="tab-subsov" role="tab" aria-controls="section-subsov" aria-selected="false" data-target="section-subsov" class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase px-5 py-4 whitespace-nowrap focus:outline-none">Subsoberanos</button></li>
       </ul>
     </div>
   </nav>
-  <!-- /TABS -->
 
-
-  <!-- countdown bar eliminada -->
-
-
-  <!-- ============================================================
-       MAIN CONTENT
-  ============================================================ -->
+  <!-- MAIN -->
   <main class="max-w-screen-xl mx-auto px-5 sm:px-8 pb-20 mt-6">
 
+    <!-- INICIO -->
+    <section id="section-inicio" role="tabpanel" aria-labelledby="tab-inicio" class="tab-section active">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <span class="section-eyebrow">Mercados Globales</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Resumen del Mercado</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">Principales activos internacionales &middot; Fuente: Yahoo Finance</p>
+        </div>
+        <span id="inicio-update" class="font-data text-[10px] text-[#3d5a73] mt-1 shrink-0"></span>
+      </div>
+      <div class="lv-divider mb-6"></div>
+      <div id="global-markets-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div class="market-card-skeleton"></div><div class="market-card-skeleton"></div>
+        <div class="market-card-skeleton"></div><div class="market-card-skeleton"></div>
+        <div class="market-card-skeleton"></div><div class="market-card-skeleton"></div>
+        <div class="market-card-skeleton"></div><div class="market-card-skeleton"></div>
+      </div>
+      <div id="error-inicio" class="hidden mt-4"></div>
+    </section>
 
-
-
-    <!-- ── SECCIÓN 1: Bonos Soberanos Argentinos ── -->
-    <section
-      id="section-bonds"
-      role="tabpanel"
-      aria-labelledby="tab-bonds"
-      class="tab-section active"
-    >
-      <!-- Encabezado general de la sección -->
+    <!-- BONOS SOBERANOS -->
+    <section id="section-bonds" role="tabpanel" aria-labelledby="tab-bonds" class="tab-section">
       <div class="flex items-start justify-between mb-5">
         <div>
-          <span class="section-eyebrow">Renta Fija · Soberana</span>
-          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
-            Bonos Soberanos Argentinos
-          </h2>
-          <p class="text-[#3d5a73] text-xs mt-1.5 font-body">
-            Títulos soberanos en dólares · Ley New York y Ley Argentina.
-          </p>
+          <span class="section-eyebrow">Renta Fija &middot; Soberana</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Bonos Soberanos Argentinos</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">T&iacute;tulos soberanos en d&oacute;lares &middot; Ley New York y Ley Argentina.</p>
         </div>
-        <div id="stats-bonds" class="hidden sm:flex items-center gap-3 text-right">
-          <!-- JS: chips de stats rápidas del total -->
-        </div>
+        <div id="stats-bonds" class="hidden sm:flex items-center gap-3 text-right"></div>
       </div>
       <div class="lv-divider mb-5"></div>
-
-      <!-- ── Sub-sección: Ley New York ── -->
+      <!-- Ley NY -->
       <div class="mb-8">
         <div class="flex items-center gap-3 mb-3">
-          <!-- Etiqueta con badge -->
-          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">
-            Ley New York
-          </span>
-          <span class="badge-ny font-display text-[9px] font-bold tracking-[0.18em] uppercase
-                        px-2 py-0.5 rounded-sm
-                        bg-[#0d5184]/20 border border-[#0d5184]/40 text-[#86afce]">
-            NY
-          </span>
+          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">Ley New York</span>
+          <span class="badge-ny font-display text-[9px] font-bold tracking-[0.18em] uppercase px-2 py-0.5 rounded-sm">NY</span>
         </div>
-        <div id="table-bonds-ny" class="table-wrapper min-h-[160px]">
-          <!-- Tabla Ley NY inyectada por JS -->
-        </div>
+        <div id="table-bonds-ny" class="table-wrapper min-h-[160px]"></div>
         <div id="error-bonds-ny" class="hidden mt-3"></div>
       </div>
-
-      <!-- ── Sub-sección: Ley Argentina ── -->
+      <!-- Ley ARG -->
       <div>
         <div class="flex items-center gap-3 mb-3">
-          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">
-            Ley Argentina
-          </span>
-          <span class="badge-arg font-display text-[9px] font-bold tracking-[0.18em] uppercase
-                        px-2 py-0.5 rounded-sm
-                        bg-[#172b40]/60 border border-[#1e3a52] text-[#3d5a73]">
-            ARG
-          </span>
+          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">Ley Argentina</span>
+          <span class="badge-arg font-display text-[9px] font-bold tracking-[0.18em] uppercase px-2 py-0.5 rounded-sm">ARG</span>
         </div>
-        <div id="table-bonds-arg" class="table-wrapper min-h-[200px]">
-          <!-- Tabla Ley ARG inyectada por JS -->
-        </div>
+        <div id="table-bonds-arg" class="table-wrapper min-h-[200px]"></div>
         <div id="error-bonds-arg" class="hidden mt-3"></div>
       </div>
-
-      <!-- Contenedor legacy oculto (mantiene compatibilidad con stats) -->
       <div id="table-bonds" class="hidden"></div>
       <div id="error-bonds" class="hidden mt-3"></div>
     </section>
 
-
-    <!-- ── SECCIÓN 2: Letras y Bonos Tasa Fija ── -->
-    <section
-      id="section-notes"
-      role="tabpanel"
-      aria-labelledby="tab-notes"
-      class="tab-section"
-    >
+    <!-- LETRAS -->
+    <section id="section-notes" role="tabpanel" aria-labelledby="tab-notes" class="tab-section">
       <div class="flex items-start justify-between mb-5">
         <div>
-          <span class="section-eyebrow">Renta Fija · Tasa Fija</span>
-          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
-            Letras &amp; Bonos Tasa Fija
-          </h2>
-          <p class="text-[#3d5a73] text-xs mt-1.5">
-            Letras del Tesoro, LECAP y bonos a tasa fija en pesos.
-          </p>
+          <span class="section-eyebrow">Renta Fija &middot; Tasa Fija</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Letras &amp; Bonos Tasa Fija</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">Letras del Tesoro, LECAP y bonos a tasa fija en pesos.</p>
         </div>
         <div id="stats-notes" class="hidden sm:flex items-center gap-3 text-right"></div>
       </div>
       <div class="lv-divider mb-5"></div>
-
       <div id="table-notes" class="table-wrapper min-h-[220px]"></div>
       <div id="error-notes" class="hidden mt-3"></div>
     </section>
 
-
-    <!-- ── SECCIÓN 3: Acciones Argentinas ── -->
-    <section
-      id="section-stocks"
-      role="tabpanel"
-      aria-labelledby="tab-stocks"
-      class="tab-section"
-    >
+    <!-- ACCIONES -->
+    <section id="section-stocks" role="tabpanel" aria-labelledby="tab-stocks" class="tab-section">
       <div class="flex items-start justify-between mb-5">
         <div>
-          <span class="section-eyebrow">Renta Variable · Local</span>
-          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
-            Acciones Argentinas
-          </h2>
-          <p class="text-[#3d5a73] text-xs mt-1.5">
-            Panel General y Lider en BYMA. Cotizaciones en pesos.
-          </p>
+          <span class="section-eyebrow">Renta Variable &middot; Local</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Acciones Argentinas</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">Panel General y L&iacute;der en BYMA. Cotizaciones en pesos.</p>
         </div>
         <div id="stats-stocks" class="hidden sm:flex items-center gap-3 text-right"></div>
       </div>
       <div class="lv-divider mb-5"></div>
-
       <div id="table-stocks" class="table-wrapper min-h-[220px]"></div>
       <div id="error-stocks" class="hidden mt-3"></div>
     </section>
 
-
-    <!-- ── SECCIÓN 4: CEDears ── -->
-    <section
-      id="section-cedears"
-      role="tabpanel"
-      aria-labelledby="tab-cedears"
-      class="tab-section"
-    >
+    <!-- CEDEARS -->
+    <section id="section-cedears" role="tabpanel" aria-labelledby="tab-cedears" class="tab-section">
       <div class="flex items-start justify-between mb-5">
         <div>
-          <span class="section-eyebrow">Renta Variable · Internacional</span>
-          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
-            CEDears
-          </h2>
-          <p class="text-[#3d5a73] text-xs mt-1.5">
-            Certificados de Depósito Argentinos. Equivalente local de acciones extranjeras.
-          </p>
+          <span class="section-eyebrow">Renta Variable &middot; Internacional</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">CEDears</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">Certificados de Dep&oacute;sito Argentinos. Equivalente local de acciones extranjeras.</p>
         </div>
         <div id="stats-cedears" class="hidden sm:flex items-center gap-3 text-right"></div>
       </div>
       <div class="lv-divider mb-5"></div>
-
       <div id="table-cedears" class="table-wrapper min-h-[220px]"></div>
       <div id="error-cedears" class="hidden mt-3"></div>
     </section>
 
-    <!-- ── SECCIÓN 5: Subsoberanos ── -->
-    <section
-      id="section-subsov"
-      role="tabpanel"
-      aria-labelledby="tab-subsov"
-      class="tab-section"
-    >
+    <!-- SUBSOBERANOS -->
+    <section id="section-subsov" role="tabpanel" aria-labelledby="tab-subsov" class="tab-section">
       <div class="flex items-start justify-between mb-5">
         <div>
-          <span class="section-eyebrow">Renta Fija · Provincial</span>
-          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
-            Subsoberanos
-          </h2>
-          <p class="text-[#3d5a73] text-xs mt-1.5">
-            Bonos provinciales en dólares · Ley extranjera.
-          </p>
+          <span class="section-eyebrow">Renta Fija &middot; Provincial</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Subsoberanos</h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">Bonos provinciales en d&oacute;lares &middot; Ley extranjera.</p>
         </div>
         <div id="stats-subsov" class="hidden sm:flex items-center gap-3 text-right"></div>
       </div>
@@ -870,1276 +379,550 @@
     </section>
 
   </main>
-  <!-- /MAIN -->
 
-
-  <!-- ============================================================
-       FOOTER
-  ============================================================ -->
+  <!-- FOOTER -->
   <footer class="border-t border-[#172b40] mt-auto">
-    <!-- Línea de acento superior -->
     <div class="lv-divider"></div>
-
     <div class="max-w-screen-xl mx-auto px-5 sm:px-8 py-7">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-
-        <!-- Logo + info -->
         <div class="flex items-start gap-4">
-          <!-- Logo pequeño (mismo mark del header, opacidad reducida) -->
-          <svg width="20" height="19" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg"
-               class="opacity-25 mt-0.5 shrink-0">
+          <svg width="20" height="19" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="opacity-25 mt-0.5 shrink-0">
             <polygon points="0,0 9,0 20,30 11,30" fill="#86afce"/>
             <polygon points="11,30 20,30 24,17 15,17" fill="#86afce"/>
             <rect x="21" y="0" width="13" height="13" fill="#0d5184"/>
           </svg>
           <div class="text-xs text-[#1e3a52] leading-relaxed">
-            <p class="font-display font-semibold text-[#3d5a73] tracking-widest text-[10px] uppercase mb-1">
-              LV Capital
-            </p>
-            <p>
-              Datos provistos por
-              <a href="https://data912.com" target="_blank" rel="noopener noreferrer"
-                 class="text-[#3d5a73] hover:text-[#86afce] transition-colors underline underline-offset-2">
-                data912.com
-              </a>
-              · API pública.
-            </p>
-            <p class="mt-0.5">
-              ⚠ Los datos se actualizan cada ~20&nbsp;s en origen. Esta página refresca cada 30&nbsp;s.
-              <strong class="text-[#3d5a73]">No apta para operaciones en tiempo real.</strong>
-            </p>
+            <p class="font-display font-semibold text-[#3d5a73] tracking-widest text-[10px] uppercase mb-1">LV Capital</p>
+            <p>Datos BYMA provistos por <a href="https://data912.com" target="_blank" rel="noopener noreferrer" class="text-[#3d5a73] hover:text-[#86afce] transition-colors underline underline-offset-2">data912.com</a> &middot; Datos globales por <a href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer" class="text-[#3d5a73] hover:text-[#86afce] transition-colors underline underline-offset-2">Yahoo Finance</a>.</p>
+            <p class="mt-0.5">&#9888; No apta para operaciones en tiempo real.</p>
           </div>
         </div>
-
-        <!-- Links de repo + versión -->
         <div class="flex flex-col items-start sm:items-end gap-3 shrink-0">
-
-          <!-- GitHub repo link -->
-          <a
-            href="https://github.com/lvcapital/monitor-mercados"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="header-btn flex items-center gap-2 text-[#1e3a52] hover:text-[#86afce]
-                   transition-colors duration-200 group"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                 viewBox="0 0 24 24" fill="currentColor"
-                 class="opacity-50 group-hover:opacity-100 transition-opacity">
-              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-            </svg>
-            <span class="font-display text-[10px] tracking-[0.12em] uppercase">
-              lvcapital / monitor-mercados
-            </span>
+          <a href="https://github.com/JuanCruzVinent/Monitor-LVCapital" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-[#1e3a52] hover:text-[#86afce] transition-colors duration-200 group">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="opacity-50 group-hover:opacity-100 transition-opacity"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+            <span class="font-display text-[10px] tracking-[0.12em] uppercase">JuanCruzVinent / Monitor-LVCapital</span>
           </a>
-
-          <!-- Versión -->
-          <div class="font-data text-[10px] text-[#172b40] text-right leading-relaxed">
-            <p class="text-[#1e3a52]">Monitor v1.0 · Vanilla JS · Tailwind CDN</p>
-          </div>
-
+          <div class="font-data text-[10px] text-[#1e3a52]">Monitor v1.0 &middot; Vanilla JS &middot; Tailwind CDN</div>
         </div>
-
       </div>
     </div>
   </footer>
-  <!-- /FOOTER -->
 
-
-  <!-- ============================================================
-       JAVASCRIPT
-  ============================================================ -->
   <script>
     /* ================================================================
-       LV Capital · Monitor de Mercados · Script principal
-       ================================================================
-       [✓] PASO 2 · Sistema de tabs
-       [ ] PASO 3 · API fetcher con skeleton + manejo de errores
-       [ ] PASO 4 · Render de tablas (Símbolo, Último, Var%, Vol, Bid, Ask)
-       [ ] PASO 5 · Auto-refresh 30s + countdown bar + reloj
-       [ ] PASO 6 · Sort de columnas
-       [ ] PASO 7 · Stats rápidas por sección
-       ================================================================ */
+       LV Capital - Monitor de Mercados
+       Todas las secciones: Inicio, Bonos, Letras, Acciones, CEDears, Subsoberanos
+    ================================================================ */
 
-
-    /* ------------------------------------------------------------
-       CONSTANTES
-    ------------------------------------------------------------ */
-
-    const API = {
+    // --- CONSTANTES ---
+    var API = {
       bonds:   'https://data912.com/live/arg_bonds',
       notes:   'https://data912.com/live/arg_notes',
       stocks:  'https://data912.com/live/arg_stocks',
       cedears: 'https://data912.com/live/arg_cedears',
     };
+    var REFRESH_INTERVAL = 30000;
 
-    const REFRESH_INTERVAL = 30000; // 30 segundos
-
-
-    /* ------------------------------------------------------------
-       REFERENCIAS AL DOM
-    ------------------------------------------------------------ */
-
-    const DOM = {
-      tabButtons:       document.querySelectorAll('.tab-btn'),
-      tabSections:      document.querySelectorAll('.tab-section'),
-      liveDot:          document.getElementById('live-dot'),
-      lastUpdateTime:   document.getElementById('last-update-time'),
-      marketBadge:      document.getElementById('market-status-badge'),
-      btnRefresh:       document.getElementById('btn-refresh'),
-      refreshIcon:      document.getElementById('refresh-icon'),
-      countdownBar:     document.getElementById('countdown-bar'),
-      countdownSeconds: document.getElementById('countdown-seconds'),
-      tableBonds:       document.getElementById('table-bonds'),
-      tableNotes:       document.getElementById('table-notes'),
-      tableStocks:      document.getElementById('table-stocks'),
-      tableCedears:     document.getElementById('table-cedears'),
-      errorBonds:       document.getElementById('error-bonds'),
-      errorNotes:       document.getElementById('error-notes'),
-      errorStocks:      document.getElementById('error-stocks'),
-      errorCedears:     document.getElementById('error-cedears'),
-    };
-
-
-    /* ------------------------------------------------------------
-       ESTADO GLOBAL
-    ------------------------------------------------------------ */
-
-    const state = {
-      activeTab:      'section-bonds',
-      sortConfig:     { key: null, dir: 'asc' },
-      refreshTimer:   null,
-      countdownTimer: null,
-      countdownSecs:  REFRESH_INTERVAL / 1000,
-    };
-
-
-    /* ============================================================
-       PASO 2 - SISTEMA DE TABS
-       ============================================================
-       Logica:
-         1. Click en un tab-btn:
-            a. Remover "active" de todos los botones y secciones
-            b. Remover el span.tab-indicator de todos los botones
-            c. Agregar "active" al boton clickeado y su seccion target
-            d. Inyectar el indicador visual bajo el tab activo
-            e. Actualizar atributos ARIA
-            f. Guardar en state.activeTab
-         2. Teclado: flechas izq/der navegan entre tabs (WAI-ARIA)
-       ============================================================ */
-
-    /**
-     * Activa un tab y muestra su seccion correspondiente.
-     * @param {HTMLElement} targetBtn  - El boton del tab a activar
-     * @param {boolean}     focusBtn   - Si debe hacer foco (teclado)
-     */
-    function activateTab(targetBtn, focusBtn) {
-      if (focusBtn === undefined) { focusBtn = false; }
-      var targetSectionId = targetBtn.dataset.target;
-
-      // 1. Desactivar todos los tabs
-      DOM.tabButtons.forEach(function(btn) {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-selected', 'false');
-        var existingIndicator = btn.querySelector('.tab-indicator');
-        if (existingIndicator) { existingIndicator.remove(); }
-      });
-
-      // 2. Ocultar todas las secciones
-      DOM.tabSections.forEach(function(section) {
-        section.classList.remove('active');
-      });
-
-      // 3. Activar el tab clickeado
-      targetBtn.classList.add('active');
-      targetBtn.setAttribute('aria-selected', 'true');
-
-      // Inyectar indicador de linea bajo el tab activo
-      var indicator = document.createElement('span');
-      indicator.className = 'tab-indicator';
-      targetBtn.appendChild(indicator);
-
-      // 4. Mostrar la seccion correspondiente
-      var targetSection = document.getElementById(targetSectionId);
-      if (targetSection) {
-        targetSection.classList.add('active');
-      }
-
-      // 5. Actualizar estado
-      state.activeTab = targetSectionId;
-
-      // 6. Foco para navegacion por teclado
-      if (focusBtn) { targetBtn.focus(); }
-    }
-
-    /**
-     * Inicializa los event listeners de los tabs.
-     * Agrega soporte de teclado: flechas izq/der, Home, End.
-     */
-    function initTabs() {
-      var btnArray = Array.from(DOM.tabButtons);
-
-      // Click en cada tab
-      btnArray.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          activateTab(btn);
-        });
-      });
-
-      // Navegacion por teclado (WAI-ARIA tab pattern)
-      btnArray.forEach(function(btn, index) {
-        btn.addEventListener('keydown', function(e) {
-          var nextIndex = null;
-
-          if (e.key === 'ArrowRight') {
-            nextIndex = (index + 1) % btnArray.length;
-          } else if (e.key === 'ArrowLeft') {
-            nextIndex = (index - 1 + btnArray.length) % btnArray.length;
-          } else if (e.key === 'Home') {
-            nextIndex = 0;
-          } else if (e.key === 'End') {
-            nextIndex = btnArray.length - 1;
-          }
-
-          if (nextIndex !== null) {
-            e.preventDefault();
-            activateTab(btnArray[nextIndex], true);
-          }
-        });
-      });
-
-      // Asegurar que el tab inicial tenga el indicador visible
-      var initialTab = document.querySelector('.tab-btn.active');
-      if (initialTab && !initialTab.querySelector('.tab-indicator')) {
-        var ind = document.createElement('span');
-        ind.className = 'tab-indicator';
-        initialTab.appendChild(ind);
-      }
-
-      console.info(
-        '%c LV Capital %c tabs OK [ bonds | notes | stocks | cedears ]',
-        'background:#172b40;color:#86afce;font-weight:700;padding:3px 8px;border-radius:2px',
-        'color:#3d5a73;font-size:11px'
-      );
-    }
-
-
-    /* ============================================================
-       PASO 3 - API FETCHER + SKELETON + RENDER DE TABLAS
-       ============================================================
-       Cada seccion tiene:
-         - tableContainer : div donde se inyecta la tabla
-         - errorContainer : div donde se muestra el error
-       Flujo por seccion:
-         1. showSkeleton()  -> muestra filas animadas mientras carga
-         2. fetchData()     -> llama a la API con fetch()
-         3. renderTable()   -> construye la tabla con los datos
-         4. showError()     -> si falla, muestra mensaje con boton reintentar
-       ============================================================ */
-
-
-    /* ------------------------------------------------------------
-       CONFIGURACION DE CADA SECCION
-       Mapea cada key interno con su endpoint, contenedor y etiquetas
-    ------------------------------------------------------------ */
-
-    var SECTIONS = {
-      bonds: {
-        url:       API.bonds,
-        tableEl:   DOM.tableBonds,
-        errorEl:   DOM.errorBonds,
-        statsEl:   document.getElementById('stats-bonds'),
-        label:     'Bonos Soberanos'
-      },
-      notes: {
-        url:       API.notes,
-        tableEl:   DOM.tableNotes,
-        errorEl:   DOM.errorNotes,
-        statsEl:   document.getElementById('stats-notes'),
-        label:     'Letras & T. Fija'
-      },
-      stocks: {
-        url:       API.stocks,
-        tableEl:   DOM.tableStocks,
-        errorEl:   DOM.errorStocks,
-        statsEl:   document.getElementById('stats-stocks'),
-        label:     'Acciones ARG'
-      },
-      cedears: {
-        url:       API.cedears,
-        tableEl:   DOM.tableCedears,
-        errorEl:   DOM.errorCedears,
-        statsEl:   document.getElementById('stats-cedears'),
-        label:     'CEDears'
-      }
-    };
-
-    /* Columnas de la tabla: { key, label, align, optional }
-       optional=true -> se oculta en mobile con clase col-optional  */
-    var COLUMNS = [
-      { key: 'symbol',  label: 'Símbolo',   align: 'left',  optional: false },
-      { key: 'last',    label: 'Último',     align: 'right', optional: false },
-      { key: 'change',  label: 'Var %',      align: 'right', optional: false },
-      { key: 'volume',  label: 'Volumen',    align: 'right', optional: true  },
+    // --- MERCADOS GLOBALES (Yahoo Finance) ---
+    var GLOBAL_ASSETS = [
+      { symbol: '%5EGSPC', name: 'S&amp;P 500',  label: 'EE.UU.',          icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
+      { symbol: '%5EIXIC', name: 'NASDAQ',        label: 'EE.UU.',          icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
+      { symbol: '%5EMERV', name: 'MERVAL',        label: 'Argentina',       icon: 'AR', prefix: '$', decimals: 0, accent: '#0d5184' },
+      { symbol: 'GC%3DF',  name: 'ORO',           label: 'USD / oz',        icon: 'AU', prefix: '$', decimals: 0, accent: '#c9943a' },
+      { symbol: 'CL%3DF',  name: 'PETR&Oacute;LEO WTI', label: 'USD / bbl', icon: 'OI', prefix: '$', decimals: 2, accent: '#86afce' },
+      { symbol: '%5ETNX',  name: 'TASA 10Y',      label: 'US Treasury',     icon: 'BD', prefix: '',  decimals: 3, suffix: '%', accent: '#3d5a73' },
+      { symbol: 'BTC-USD', name: 'BITCOIN',       label: 'Crypto USD',      icon: 'BT', prefix: '$', decimals: 0, accent: '#c9943a' },
+      { symbol: 'ETH-USD', name: 'ETHEREUM',      label: 'Crypto USD',      icon: 'ET', prefix: '$', decimals: 0, accent: '#86afce' },
     ];
 
+    var ICON_STYLES = {
+      'US': { bg:'rgba(134,175,206,0.12)', color:'#86afce', text:'US' },
+      'AR': { bg:'rgba(13,81,132,0.15)',   color:'#86afce', text:'AR' },
+      'AU': { bg:'rgba(201,148,58,0.15)',  color:'#c9943a', text:'AU' },
+      'OI': { bg:'rgba(134,175,206,0.10)', color:'#86afce', text:'OI' },
+      'BD': { bg:'rgba(61,90,115,0.20)',   color:'#5a7a94', text:'BD' },
+      'BT': { bg:'rgba(201,148,58,0.15)',  color:'#c9943a', text:'&#8383;' },
+      'ET': { bg:'rgba(134,175,206,0.12)', color:'#86afce', text:'&#926;' },
+    };
 
-    /* ------------------------------------------------------------
-       HELPERS DE FORMATO
-    ------------------------------------------------------------ */
+    function fmtGlobalPrice(val, asset) {
+      if (val === null || isNaN(val)) { return '&mdash;'; }
+      var n = parseFloat(val);
+      var formatted = n.toLocaleString('en-US', { minimumFractionDigits: asset.decimals, maximumFractionDigits: asset.decimals });
+      return (asset.prefix || '') + formatted + (asset.suffix || '');
+    }
 
-    /** Formatea un numero como precio: 1234567.89 -> "1.234.567,89" */
+    function renderGlobalMarkets(results) {
+      var grid = document.getElementById('global-markets-grid');
+      if (!grid) { return; }
+      var html = '';
+      results.forEach(function(item) {
+        var asset = item.asset;
+        var ist = ICON_STYLES[asset.icon] || { bg:'rgba(134,175,206,0.1)', color:'#86afce', text:'--' };
+        var changeClass = item.change > 0 ? 'positive' : item.change < 0 ? 'negative' : 'neutral';
+        var arrow = item.change > 0 ? '&#9650;' : item.change < 0 ? '&#9660;' : '&#9658;';
+        var sign  = item.change > 0 ? '+' : '';
+        html += '<div class="market-card" style="--card-accent:' + asset.accent + '">';
+        html += '<div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6px;background:' + ist.bg + ';color:' + ist.color + ';font-family:JetBrains Mono,monospace;font-size:0.65rem;font-weight:700;letter-spacing:0.05em;">' + ist.text + '</div>';
+        html += '<div class="card-name" style="margin-top:10px">' + asset.name + '</div>';
+        html += '<div class="card-label">' + asset.label + '</div>';
+        if (item.error) {
+          html += '<div class="card-price" style="font-size:0.8rem;color:var(--text-muted)">&mdash;</div>';
+          html += '<div class="card-change neutral" style="font-size:0.7rem">Sin datos</div>';
+        } else {
+          html += '<div class="card-price">' + fmtGlobalPrice(item.price, asset) + '</div>';
+          html += '<div class="card-change ' + changeClass + '">' + arrow + ' ' + sign + item.change.toFixed(2) + '%'
+               + '<span style="opacity:0.4;font-size:0.68rem;margin-left:6px">'
+               + (item.changeAbs >= 0 ? '+' : '') + fmtGlobalPrice(item.changeAbs, asset) + '</span></div>';
+        }
+        html += '</div>';
+      });
+      grid.innerHTML = html;
+      var upd = document.getElementById('inicio-update');
+      if (upd) {
+        var now = new Date();
+        upd.textContent = 'Actualizado: ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+      }
+    }
+
+    function fetchYahooSymbol(asset) {
+      var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + asset.symbol + '?interval=1d&range=2d&corsDomain=finance.yahoo.com';
+      return fetch(url, { headers: { 'Accept': 'application/json' } })
+        .then(function(res) { if (!res.ok) { throw new Error('HTTP ' + res.status); } return res.json(); })
+        .then(function(data) {
+          var meta   = data.chart.result[0].meta;
+          var price  = meta.regularMarketPrice;
+          var prev   = meta.previousClose || meta.chartPreviousClose || price;
+          var change = prev ? ((price - prev) / prev) * 100 : 0;
+          return { asset: asset, price: price, change: change, changeAbs: price - prev, error: false };
+        })
+        .catch(function() { return { asset: asset, price: null, change: 0, changeAbs: 0, error: true }; });
+    }
+
+    function loadGlobalMarkets() {
+      Promise.all(GLOBAL_ASSETS.map(fetchYahooSymbol)).then(renderGlobalMarkets);
+    }
+
+    // --- DOM REFS ---
+    var DOM = {
+      tabButtons:   document.querySelectorAll('.tab-btn'),
+      tabSections:  document.querySelectorAll('.tab-section'),
+      liveDot:      document.getElementById('live-dot'),
+      lastUpdateTime: document.getElementById('last-update-time'),
+      btnRefresh:   document.getElementById('btn-refresh'),
+      refreshIcon:  document.getElementById('refresh-icon'),
+      tableBonds:   document.getElementById('table-bonds'),
+      tableNotes:   document.getElementById('table-notes'),
+      tableStocks:  document.getElementById('table-stocks'),
+      tableCedears: document.getElementById('table-cedears'),
+      errorBonds:   document.getElementById('error-bonds'),
+      errorNotes:   document.getElementById('error-notes'),
+      errorStocks:  document.getElementById('error-stocks'),
+      errorCedears: document.getElementById('error-cedears'),
+    };
+
+    // --- STATE ---
+    var state = { activeTab:'section-inicio', refreshTimer:null };
+
+    // --- TABS ---
+    function activateTab(btn, focus) {
+      var targetId = btn.dataset.target;
+      DOM.tabButtons.forEach(function(b) {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected','false');
+        var ind = b.querySelector('.tab-indicator');
+        if (ind) { ind.remove(); }
+      });
+      DOM.tabSections.forEach(function(s) { s.classList.remove('active'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      var ind = document.createElement('span');
+      ind.className = 'tab-indicator';
+      btn.appendChild(ind);
+      var section = document.getElementById(targetId);
+      if (section) { section.classList.add('active'); }
+      state.activeTab = targetId;
+      if (focus) { btn.focus(); }
+    }
+
+    function initTabs() {
+      var arr = Array.from(DOM.tabButtons);
+      arr.forEach(function(btn) { btn.addEventListener('click', function() { activateTab(btn); }); });
+      arr.forEach(function(btn, i) {
+        btn.addEventListener('keydown', function(e) {
+          var ni = null;
+          if (e.key==='ArrowRight') { ni=(i+1)%arr.length; }
+          else if (e.key==='ArrowLeft') { ni=(i-1+arr.length)%arr.length; }
+          else if (e.key==='Home') { ni=0; }
+          else if (e.key==='End')  { ni=arr.length-1; }
+          if (ni!==null) { e.preventDefault(); activateTab(arr[ni],true); }
+        });
+      });
+      var init = document.querySelector('.tab-btn.active');
+      if (init && !init.querySelector('.tab-indicator')) { var ind=document.createElement('span'); ind.className='tab-indicator'; init.appendChild(ind); }
+    }
+
+    // --- THEME ---
+    function initTheme() {
+      var html=document.documentElement, btnT=document.getElementById('btn-theme');
+      var sunI=document.getElementById('icon-sun'), moonI=document.getElementById('icon-moon');
+      applyTheme(localStorage.getItem('lv-theme')||'dark');
+      if (btnT) { btnT.addEventListener('click', function() {
+        var cur=html.classList.contains('light')?'light':'dark';
+        var nxt=cur==='dark'?'light':'dark';
+        applyTheme(nxt); localStorage.setItem('lv-theme',nxt);
+      }); }
+      function applyTheme(t) {
+        if (t==='light') { html.classList.remove('dark'); html.classList.add('light'); if(sunI)sunI.classList.add('hidden'); if(moonI)moonI.classList.remove('hidden'); }
+        else { html.classList.remove('light'); html.classList.add('dark'); if(sunI)sunI.classList.remove('hidden'); if(moonI)moonI.classList.add('hidden'); }
+      }
+    }
+
+    // --- SECTIONS CONFIG ---
+    var SECTIONS = {
+      notes:   { url:API.notes,   tableEl:document.getElementById('table-notes'),   errorEl:document.getElementById('error-notes'),   statsEl:document.getElementById('stats-notes'),   label:'Letras & T. Fija', rawData:null, sortKey:null, sortDir:'asc' },
+      stocks:  { url:API.stocks,  tableEl:document.getElementById('table-stocks'),  errorEl:document.getElementById('error-stocks'),  statsEl:document.getElementById('stats-stocks'),  label:'Acciones ARG',     rawData:null, sortKey:null, sortDir:'asc' },
+      cedears: { url:API.cedears, tableEl:document.getElementById('table-cedears'), errorEl:document.getElementById('error-cedears'), statsEl:document.getElementById('stats-cedears'), label:'CEDears',           rawData:null, sortKey:null, sortDir:'asc' },
+    };
+
+    var COLUMNS = [
+      { key:'symbol', label:'S\u00EDmbolo', align:'left',  optional:false },
+      { key:'last',   label:'&Uacute;ltimo', align:'right', optional:false },
+      { key:'change', label:'Var %',        align:'right', optional:false },
+      { key:'volume', label:'Volumen',      align:'right', optional:true  },
+    ];
+
+    // --- HELPERS ---
     function fmtPrice(val) {
-      var n = parseFloat(val);
-      if (isNaN(n)) { return '<span class="var-neutral">—</span>'; }
-      return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var n=parseFloat(val); if(isNaN(n)){return '<span class="var-neutral">&mdash;</span>';}
+      return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
-
-    /** Formatea variacion porcentual con signo y clase de color */
     function fmtChange(val) {
-      var n = parseFloat(val);
-      if (isNaN(n)) { return '<span class="var-neutral">—</span>'; }
-      var sign  = n > 0 ? '+' : '';
-      var cls   = n > 0 ? 'var-positive' : n < 0 ? 'var-negative' : 'var-neutral';
-      var arrow = n > 0 ? '▲' : n < 0 ? '▼' : '▸';
-      return '<span class="' + cls + '">' + arrow + ' ' + sign + n.toFixed(2) + '%</span>';
+      var n=parseFloat(val); if(isNaN(n)){return '<span class="var-neutral">&mdash;</span>';}
+      var sign=n>0?'+':'', cls=n>0?'var-positive':n<0?'var-negative':'var-neutral', arrow=n>0?'&#9650;':n<0?'&#9660;':'&#9658;';
+      return '<span class="'+cls+'">'+arrow+' '+sign+n.toFixed(2)+'%</span>';
     }
-
-    /** Formatea volumen: 1234567 -> "1.234.567" */
     function fmtVolume(val) {
-      var n = parseInt(val, 10);
-      if (isNaN(n) || n === 0) { return '<span class="var-neutral">—</span>'; }
+      var n=parseInt(val,10); if(isNaN(n)||n===0){return '<span class="var-neutral">&mdash;</span>';}
       return n.toLocaleString('es-AR');
     }
-
-    /** Extrae el valor de un objeto de la API segun posibles nombres de campo */
-    function getField(obj, keys) {
-      for (var i = 0; i < keys.length; i++) {
-        if (obj[keys[i]] !== undefined && obj[keys[i]] !== null && obj[keys[i]] !== '') {
-          return obj[keys[i]];
-        }
-      }
-      return null;
+    function getField(obj,keys) {
+      for(var i=0;i<keys.length;i++){if(obj[keys[i]]!==undefined&&obj[keys[i]]!==null&&obj[keys[i]]!==''){return obj[keys[i]];}} return null;
     }
-
-    /**
-     * Normaliza un item crudo de la API a un objeto estandar.
-     * La API de data912 puede usar distintos nombres de campo
-     * segun el endpoint, por eso buscamos multiples variantes.
-     */
     function normalizeItem(raw) {
       return {
-        symbol: getField(raw, ['symbol', 'ticker', 'simbolo', 'id'])     || '—',
-        last:   getField(raw, ['last', 'ultimo', 'close', 'price', 'c']) || null,
-        change: getField(raw, ['variacion', 'change', 'pct_change', 'var', 'changePercent', 'variation', 'd']) || null,
-        volume: getField(raw, ['volume', 'volumen', 'vol', 'v'])          || null,
-        bid:    getField(raw, ['bid', 'compra', 'px_bid'])                || null,
-        ask:    getField(raw, ['ask', 'venta', 'oferta', 'px_ask'])       || null,
+        symbol: getField(raw,['symbol','ticker','simbolo','id'])||'&mdash;',
+        last:   getField(raw,['last','ultimo','close','price','c'])||null,
+        change: getField(raw,['variacion','change','pct_change','var','changePercent','variation','d'])||null,
+        volume: getField(raw,['volume','volumen','vol','v'])||null,
       };
     }
 
-
-    /* ------------------------------------------------------------
-       SKELETON LOADER
-       Muestra filas animadas mientras los datos cargan
-    ------------------------------------------------------------ */
-
-    function showSkeleton(tableEl) {
-      var SKELETON_ROWS = 12;
-      var html = '<table class="market-table">';
-
-      // Header con las mismas columnas
-      html += '<thead><tr>';
-      COLUMNS.forEach(function(col) {
-        var optClass = col.optional ? ' col-optional' : '';
-        html += '<th class="' + optClass + '">' + col.label + '</th>';
+    // --- SORT ---
+    function sortItems(items,key,dir) {
+      var sorted=items.slice();
+      sorted.sort(function(a,b){
+        var na=normalizeItem(a),nb=normalizeItem(b);
+        var va=na[key],vb=nb[key];
+        if(va===null||va==='&mdash;'||va===''){return 1;}
+        if(vb===null||vb==='&mdash;'||vb===''){return -1;}
+        var na2=parseFloat(va),nb2=parseFloat(vb);
+        var res=!isNaN(na2)&&!isNaN(nb2)?na2-nb2:(String(va).toUpperCase()<String(vb).toUpperCase()?-1:String(va).toUpperCase()>String(vb).toUpperCase()?1:0);
+        return dir==='desc'?-res:res;
       });
-      html += '</tr></thead><tbody>';
-
-      // Filas skeleton
-      for (var i = 0; i < SKELETON_ROWS; i++) {
-        html += '<tr>';
-        COLUMNS.forEach(function(col, idx) {
-          var optClass = col.optional ? ' col-optional' : '';
-          // Anchos variados para que se vea natural
-          var widths = ['60px','50px','55px','70px','50px','50px'];
-          html += '<td class="' + optClass + '">'
-               +  '<div class="skeleton" style="height:12px;width:' + widths[idx] + '"></div>'
-               +  '</td>';
-        });
-        html += '</tr>';
-      }
-
-      html += '</tbody></table>';
-      tableEl.innerHTML = html;
-      tableEl.classList.remove('hidden');
-    }
-
-
-    /* ------------------------------------------------------------
-       MOSTRAR ERROR
-    ------------------------------------------------------------ */
-
-    function showError(section, message) {
-      // Limpiar skeleton
-      section.tableEl.innerHTML = '';
-
-      // Construir mensaje de error
-      section.errorEl.innerHTML =
-        '<div class="toast-error flex items-start gap-3 px-5 py-4">'
-        + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" '
-        +   'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
-        +   'stroke-linejoin="round" class="shrink-0 mt-0.5 opacity-70">'
-        +   '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
-        +   '<line x1="12" y1="16" x2="12.01" y2="16"/>'
-        + '</svg>'
-        + '<div>'
-        +   '<p class="font-display text-[11px] tracking-wide uppercase font-semibold mb-1">'
-        +     'Error al cargar ' + section.label
-        +   '</p>'
-        +   '<p class="text-[12px] opacity-70 font-body">' + message + '</p>'
-        +   '<button onclick="retrySection(this)" '
-        +     'data-section-key="' + getSectionKey(section) + '" '
-        +     'class="mt-3 font-display text-[10px] tracking-[0.1em] uppercase '
-        +     'border border-current px-3 py-1.5 rounded-sm opacity-70 hover:opacity-100 '
-        +     'transition-opacity">'
-        +     'Reintentar'
-        +   '</button>'
-        + '</div>'
-        + '</div>';
-
-      section.errorEl.classList.remove('hidden');
-    }
-
-    /** Obtiene la key de una seccion a partir del objeto */
-    function getSectionKey(section) {
-      var keys = Object.keys(SECTIONS);
-      for (var i = 0; i < keys.length; i++) {
-        if (SECTIONS[keys[i]] === section) { return keys[i]; }
-      }
-      return '';
-    }
-
-    /** Boton reintentar: vuelve a fetchear esa seccion */
-    function retrySection(btn) {
-      var key = btn.dataset.sectionKey;
-      if (SECTIONS[key]) {
-        SECTIONS[key].errorEl.classList.add('hidden');
-        SECTIONS[key].errorEl.innerHTML = '';
-        loadSection(key);
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       RENDER DE TABLA
-       Construye el HTML de la tabla con los datos normalizados
-    ------------------------------------------------------------ */
-
-    /* ============================================================
-       PASO 6 - SORT DE COLUMNAS
-       ============================================================
-       Logica:
-         - Cada <th> tiene data-key con el nombre del campo
-         - Al hacer click: si ya estaba ordenado por ese campo,
-           invierte la direccion (asc -> desc -> asc)
-           Si es un campo nuevo, ordena asc por defecto
-         - Los datos crudos se guardan en section.rawData para
-           poder re-sortear sin volver a llamar a la API
-         - El icono del header muestra: ↑ asc / ↓ desc / ⇅ sin orden
-       ============================================================ */
-
-    /**
-     * Ordena un array de items normalizados por un campo dado.
-     * @param {Array}  items  - Array de objetos normalizados
-     * @param {string} key    - Campo por el que ordenar
-     * @param {string} dir    - 'asc' o 'desc'
-     * @returns {Array} nuevo array ordenado (no muta el original)
-     */
-    function sortItems(items, key, dir) {
-      var sorted = items.slice(); // copia para no mutar el original
-
-      sorted.sort(function(a, b) {
-        var normA = normalizeItem(a);
-        var normB = normalizeItem(b);
-        var valA  = normA[key];
-        var valB  = normB[key];
-
-        // Intentar comparacion numerica primero
-        var numA = parseFloat(valA);
-        var numB = parseFloat(valB);
-
-        var result;
-        if (!isNaN(numA) && !isNaN(numB)) {
-          // Comparacion numerica
-          result = numA - numB;
-        } else {
-          // Comparacion alfabetica (para simbolos)
-          var strA = String(valA || '').toUpperCase();
-          var strB = String(valB || '').toUpperCase();
-          result   = strA < strB ? -1 : strA > strB ? 1 : 0;
-        }
-
-        // Valores nulos/vacios van al final siempre
-        if (valA === null || valA === '' || valA === '—') { return 1; }
-        if (valB === null || valB === '' || valB === '—') { return -1; }
-
-        return dir === 'desc' ? -result : result;
-      });
-
       return sorted;
     }
 
-    /**
-     * Adjunta los listeners de sort a los <th> de una tabla ya renderizada.
-     * @param {HTMLElement} tableEl  - El contenedor div de la tabla
-     * @param {Object}      section  - El objeto de seccion (tiene rawData, sortKey, sortDir)
-     */
-    function attachSortListeners(tableEl, section) {
-      var headers = tableEl.querySelectorAll('th.sortable');
-
-      headers.forEach(function(th) {
-        th.addEventListener('click', function() {
-          var clickedKey = th.dataset.key;
-
-          // Determinar nueva direccion
-          if (section.sortKey === clickedKey) {
-            // Mismo campo: invertir direccion
-            section.sortDir = section.sortDir === 'asc' ? 'desc' : 'asc';
-          } else {
-            // Campo nuevo: empezar en asc
-            section.sortKey = clickedKey;
-            section.sortDir = 'asc';
-          }
-
-          // Ordenar los datos crudos guardados
-          var sorted = sortItems(section.rawData || [], section.sortKey, section.sortDir);
-
-          // Re-renderizar la tabla con datos ordenados
-          renderTable(section, sorted);
+    function attachSortListeners(tableEl,section) {
+      var headers=tableEl.querySelectorAll('th.sortable');
+      headers.forEach(function(th){
+        th.addEventListener('click',function(){
+          var k=th.dataset.key;
+          if(section.sortKey===k){section.sortDir=section.sortDir==='asc'?'desc':'asc';}
+          else{section.sortKey=k;section.sortDir='asc';}
+          renderTable(section,sortItems(section.rawData||[],section.sortKey,section.sortDir));
         });
       });
     }
 
-    function renderTable(section, items) {
-      if (!items || items.length === 0) {
-        section.tableEl.innerHTML =
-          '<div class="px-6 py-12 text-center font-display text-[11px] '
-          + 'tracking-widest uppercase text-[#1e3a52]">Sin datos disponibles</div>';
-        return;
-      }
-
-      var activeSortKey = section.sortKey || null;
-      var activeSortDir = section.sortDir || 'asc';
-
-      var html = '<table class="market-table"><thead><tr>';
-
-      // Cabeceras con icono de sort dinamico
-      COLUMNS.forEach(function(col) {
-        var optClass   = col.optional ? ' col-optional' : '';
-        var alignClass = col.align === 'right' ? ' text-right' : '';
-        var isSorted   = (col.key === activeSortKey);
-        var sortedClass = isSorted ? ' sorted' : '';
-
-        // Icono: flecha segun estado
-        var icon;
-        if (!isSorted)                        { icon = '⇅'; }
-        else if (activeSortDir === 'asc')     { icon = '↑'; }
-        else                                  { icon = '↓'; }
-
-        html += '<th class="sortable' + optClass + alignClass + sortedClass
-             +  '" data-key="' + col.key + '">'
-             +  col.label
-             +  '<span class="sort-icon">' + icon + '</span>'
-             +  '</th>';
+    // --- RENDER TABLE ---
+    function renderTable(section,items) {
+      if(!items||items.length===0){section.tableEl.innerHTML='<div class="px-6 py-12 text-center font-display text-[11px] tracking-widest uppercase" style="color:var(--text-muted)">Sin datos disponibles</div>';return;}
+      var ask=section.sortKey,adir=section.sortDir;
+      var html='<table class="market-table"><thead><tr>';
+      COLUMNS.forEach(function(col){
+        var oc=col.optional?' col-optional':'',ac=col.align==='right'?' text-right':'';
+        var isSorted=col.key===ask,sc=isSorted?' sorted':'';
+        var icon='<span class="sort-icon">'+(isSorted?(adir==='asc'?'&#8593;':'&#8595;'):'&#8645;')+'</span>';
+        html+='<th class="sortable'+oc+ac+sc+'" data-key="'+col.key+'">'+col.label+icon+'</th>';
       });
-
-      html += '</tr></thead><tbody>';
-
-      // Filas de datos
-      items.forEach(function(raw) {
-        var item = normalizeItem(raw);
-        html += '<tr>';
-        html += '<td class="col-symbol">' + item.symbol + '</td>';
-        html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
-        html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
-        html += '<td class="text-right font-data col-optional">' + fmtVolume(item.volume) + '</td>';
-        html += '</tr>';
+      html+='</tr></thead><tbody>';
+      items.forEach(function(raw){
+        var item=normalizeItem(raw);
+        html+='<tr><td class="col-symbol">'+item.symbol+'</td><td class="text-right font-data">'+fmtPrice(item.last)+'</td><td class="text-right font-data">'+fmtChange(item.change)+'</td><td class="text-right font-data col-optional">'+fmtVolume(item.volume)+'</td></tr>';
       });
-
-      html += '</tbody></table>';
-      section.tableEl.innerHTML = html;
-
-      // Adjuntar listeners de sort a los headers recien creados
-      attachSortListeners(section.tableEl, section);
+      html+='</tbody></table>';
+      section.tableEl.innerHTML=html;
+      attachSortListeners(section.tableEl,section);
     }
 
+    // --- SKELETON ---
+    function showSkeleton(tableEl) {
+      var html='<table class="market-table"><thead><tr>';
+      COLUMNS.forEach(function(col){html+='<th class="'+(col.optional?'col-optional':'')+'">'+(col.label||'')+'</th>';});
+      html+='</tr></thead><tbody>';
+      for(var i=0;i<12;i++){
+        html+='<tr>';
+        COLUMNS.forEach(function(col,j){html+='<td class="'+(col.optional?'col-optional':'')+'"><div class="skeleton" style="height:12px;width:'+(j===0?'60px':j===1?'50px':'55px')+'"></div></td>';});
+        html+='</tr>';
+      }
+      html+='</tbody></table>';
+      tableEl.innerHTML=html;
+    }
 
-    /* ------------------------------------------------------------
-       FETCH DE DATOS
-       Llama a la API, normaliza y renderiza. Maneja errores.
-    ------------------------------------------------------------ */
+    // --- SHOW ERROR ---
+    function showError(section,message) {
+      if(section.tableEl){section.tableEl.innerHTML='';}
+      if(!section.errorEl){return;}
+      section.errorEl.innerHTML='<div class="toast-error flex items-start gap-3 px-5 py-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5 opacity-70"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div><p class="font-display text-[11px] tracking-wide uppercase font-semibold mb-1">Error al cargar '+section.label+'</p><p class="text-[12px] opacity-70">'+message+'</p><button onclick="retrySection(this)" data-section-key="'+getSectionKey(section)+'" class="mt-3 font-display text-[10px] tracking-[0.1em] uppercase border border-current px-3 py-1.5 rounded-sm opacity-70 hover:opacity-100 transition-opacity">Reintentar</button></div></div>';
+      section.errorEl.classList.remove('hidden');
+    }
+    function getSectionKey(section){var keys=Object.keys(SECTIONS);for(var i=0;i<keys.length;i++){if(SECTIONS[keys[i]]===section){return keys[i];}}return '';}
+    function retrySection(btn){var k=btn.dataset.sectionKey;if(SECTIONS[k]){SECTIONS[k].errorEl.classList.add('hidden');SECTIONS[k].errorEl.innerHTML='';loadSection(k);}}
 
+    // --- LOAD SECTION ---
     function loadSection(key) {
-      var section = SECTIONS[key];
-      if (!section) { return; }
-
-      // Limpiar error previo
-      section.errorEl.classList.add('hidden');
-      section.errorEl.innerHTML = '';
-
-      // Solo mostrar skeleton en la carga inicial (sin datos previos)
-      // En refreshes posteriores actualizar silenciosamente para evitar flash
-      if (!section.rawData || section.rawData.length === 0) {
-        showSkeleton(section.tableEl);
-      }
-
+      var section=SECTIONS[key]; if(!section){return;}
+      section.errorEl.classList.add('hidden'); section.errorEl.innerHTML='';
+      if(!section.rawData||section.rawData.length===0){showSkeleton(section.tableEl);}
       fetch(section.url)
-        .then(function(response) {
-          if (!response.ok) {
-            throw new Error('HTTP ' + response.status + ' — ' + response.statusText);
-          }
-          return response.json();
+        .then(function(r){if(!r.ok){throw new Error('HTTP '+r.status);}return r.json();})
+        .then(function(data){
+          var items=Array.isArray(data)?data:data.data||data.items||data.result||[];
+          section.rawData=items; section.sortKey=null; section.sortDir='asc';
+          renderTable(section,items);
+          try{renderStats(section);}catch(e){}
         })
-        .then(function(data) {
-          // La API puede devolver el array directamente o dentro de una propiedad
-          var items = Array.isArray(data) ? data
-                    : data.data   ? data.data
-                    : data.items  ? data.items
-                    : data.result ? data.result
-                    : [];
-
-          // Guardar los datos crudos en la seccion para poder re-sortear sin refetch
-          section.rawData = items;
-
-          // Resetear sort al cargar datos frescos
-          section.sortKey = null;
-          section.sortDir = 'asc';
-
-          renderTable(section, items);
-          renderStats(section);
-
-          console.info(
-            '%c LV Capital %c ' + key + ' -> ' + items.length + ' instrumentos',
-            'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
-            'color:#3d5a73'
-          );
-        })
-        .catch(function(err) {
-          console.error('[LV Capital] Error cargando ' + key + ':', err.message);
-          showError(section, err.message || 'No se pudo conectar con data912.com');
-        });
+        .catch(function(err){showError(section,err.message||'No se pudo conectar con data912.com');});
     }
 
-    /* ============================================================
-       PASO 7 - STATS RAPIDAS POR SECCION
-       ============================================================
-       Se muestran arriba a la derecha de cada seccion (desktop):
-         - Total de instrumentos
-         - Mayor alza del dia  (simbolo + variacion%)
-         - Mayor baja del dia  (simbolo + variacion%)
-         - % de instrumentos en verde vs rojo
-       Se calculan a partir de los datos normalizados ya descargados,
-       sin ningun fetch adicional.
-       ============================================================ */
-
-    /**
-     * Calcula y renderiza los chips de stats para una seccion.
-     * @param {Object} section - El objeto de seccion (con rawData y statsEl)
-     */
-    function renderStats(section) {
-      if (!section.statsEl || !section.rawData || section.rawData.length === 0) {
-        return;
+    // --- STATS ---
+    function renderStats(section){
+      if(!section.statsEl||!section.rawData||section.rawData.length===0){return;}
+      var items=section.rawData.map(normalizeItem), total=items.length;
+      var wc=items.filter(function(i){return i.change!==null&&!isNaN(parseFloat(i.change));});
+      var topG=null,topL=null;
+      if(wc.length>0){
+        topG=wc.reduce(function(b,i){return parseFloat(i.change)>parseFloat(b.change)?i:b;});
+        topL=wc.reduce(function(w,i){return parseFloat(i.change)<parseFloat(w.change)?i:w;});
       }
-
-      var items = section.rawData.map(normalizeItem);
-      var total = items.length;
-
-      // Filtrar solo los que tienen variacion numerica valida
-      var withChange = items.filter(function(item) {
-        return item.change !== null && !isNaN(parseFloat(item.change));
-      });
-
-      // Mayor alza y mayor baja
-      var topGainer = null;
-      var topLoser  = null;
-
-      if (withChange.length > 0) {
-        topGainer = withChange.reduce(function(best, item) {
-          return parseFloat(item.change) > parseFloat(best.change) ? item : best;
-        });
-        topLoser = withChange.reduce(function(worst, item) {
-          return parseFloat(item.change) < parseFloat(worst.change) ? item : worst;
-        });
-      }
-
-      // Conteo positivos / negativos / neutros
-      var positives = withChange.filter(function(i) { return parseFloat(i.change) > 0; }).length;
-      var negatives = withChange.filter(function(i) { return parseFloat(i.change) < 0; }).length;
-      var pctGreen  = total > 0 ? Math.round((positives / total) * 100) : 0;
-      var pctRed    = total > 0 ? Math.round((negatives / total) * 100) : 0;
-
-      /* ── Helpers para chips ── */
-      function chip(label, value, colorClass) {
-        return '<div class="flex flex-col items-end gap-0.5">'
-          + '<span class="font-display text-[9px] tracking-[0.15em] uppercase text-[#1e3a52]">'
-          + label + '</span>'
-          + '<span class="font-data text-[11px] ' + colorClass + '">' + value + '</span>'
-          + '</div>';
-      }
-
-      function separator() {
-        return '<div class="w-px h-6 bg-[#172b40] mx-1"></div>';
-      }
-
-      /* ── Construir HTML de stats ── */
-      var html = '';
-
-      // Total de instrumentos
-      html += chip('Instrumentos', total, 'text-[#86afce]');
-
-      if (topGainer && parseFloat(topGainer.change) > 0) {
-        html += separator();
-        var gainVal = '+' + parseFloat(topGainer.change).toFixed(2) + '%';
-        html += chip('Mayor alza', topGainer.symbol + ' ' + gainVal, 'var-positive');
-      }
-
-      if (topLoser && parseFloat(topLoser.change) < 0) {
-        html += separator();
-        var lossVal = parseFloat(topLoser.change).toFixed(2) + '%';
-        html += chip('Mayor baja', topLoser.symbol + ' ' + lossVal, 'var-negative');
-      }
-
-      if (withChange.length > 0) {
-        html += separator();
-        // Mini barra verde/rojo
-        html += '<div class="flex flex-col items-end gap-1">'
-          + '<span class="font-display text-[9px] tracking-[0.15em] uppercase text-[#1e3a52]">Mercado</span>'
-          + '<div class="flex items-center gap-1.5">'
-          +   '<span class="font-data text-[10px] var-positive">' + pctGreen + '%▲</span>'
-          +   '<div class="flex h-1.5 w-16 rounded-full overflow-hidden bg-[#172b40]">'
-          +     '<div class="bg-[#4db88a] transition-all duration-500" style="width:' + pctGreen + '%"></div>'
-          +     '<div class="bg-[#e05c5c] transition-all duration-500" style="width:' + pctRed + '%"></div>'
-          +   '</div>'
-          +   '<span class="font-data text-[10px] var-negative">' + pctRed + '%▼</span>'
-          + '</div>'
-          + '</div>';
-      }
-
-      section.statsEl.innerHTML = html;
-      section.statsEl.classList.remove('hidden');
+      var pos=wc.filter(function(i){return parseFloat(i.change)>0;}).length;
+      var neg=wc.filter(function(i){return parseFloat(i.change)<0;}).length;
+      var pg=total>0?Math.round(pos/total*100):0, pr=total>0?Math.round(neg/total*100):0;
+      function chip(lbl,val,cls){return '<div class="flex flex-col items-end gap-0.5"><span class="font-display text-[9px] tracking-[0.15em] uppercase" style="color:var(--text-muted)">'+lbl+'</span><span class="font-data text-[11px] '+cls+'">'+val+'</span></div>';}
+      function sep(){return '<div class="w-px h-6 mx-1" style="background:var(--border-subtle)"></div>';}
+      var html=chip('Instrumentos',total,'text-[#86afce]');
+      if(topG&&parseFloat(topG.change)>0){html+=sep()+chip('Mayor alza',topG.symbol+' +'+parseFloat(topG.change).toFixed(2)+'%','var-positive');}
+      if(topL&&parseFloat(topL.change)<0){html+=sep()+chip('Mayor baja',topL.symbol+' '+parseFloat(topL.change).toFixed(2)+'%','var-negative');}
+      if(wc.length>0){html+=sep()+'<div class="flex flex-col items-end gap-1"><span class="font-display text-[9px] tracking-[0.15em] uppercase" style="color:var(--text-muted)">Mercado</span><div class="flex items-center gap-1.5"><span class="font-data text-[10px] var-positive">'+pg+'%&#9650;</span><div class="flex h-1.5 w-16 rounded-full overflow-hidden" style="background:var(--bg-hover)"><div class="bg-[#4db88a]" style="width:'+pg+'%"></div><div class="bg-[#e05c5c]" style="width:'+pr+'%"></div></div><span class="font-data text-[10px] var-negative">'+pr+'%&#9660;</span></div></div>';}
+      section.statsEl.innerHTML=html; section.statsEl.classList.remove('hidden');
     }
 
-    /* ============================================================
-       TIR (YTM) - CALCULO EN FRONTEND
-       ============================================================
-       La API no devuelve TIR. Se calcula con Newton-Raphson usando:
-         - Precio actual (campo "c" de la API, en USD por $100 VN)
-         - Parametros de cada bono: vencimiento, cupon, face restante
-       Los parametros estan basados en la reestructuracion 2020.
-       NOTA: la TIR mostrada es INDICATIVA. Para operaciones usar
-       fuentes profesionales certificadas.
-       ============================================================ */
-
-    /**
-     * Catalogo de parametros por bono.
-     * mat   : anios hasta vencimiento desde 2020 (se recalcula vs hoy)
-     * cpn   : tasa cupon anual % sobre face restante
-     * face  : face restante por cada $100 VN original (aprox.)
-     * matDate: fecha de vencimiento YYYY-MM-DD
-     */
-    /* ── Catálogo de flujos exactos extraídos del Excel Flujos_automatizados.xlsm ──
-       Cada entrada tiene:
-         tir   : TIR calculada en el Excel con flujos reales (%)
-         flows : array de {date, flow} con todos los flujos futuros
-                 flow = USD por cada $100 VN original
-       Fuente: pestaña "Flujos Soberanos"
-    ── */
-    /* Fechas de vencimiento por ticker */
+    // --- BOND MATURITY & ISSUERS ---
     var BOND_MATURITY = {
-      'GD29D':'09/07/2029','GD30D':'09/07/2030','GD35D':'09/07/2035',
-      'GD38D':'09/07/2038','GD41D':'09/07/2041',
-      'AO27D':'29/10/2027','AL29D':'09/07/2029','AN29D':'30/11/2029',
-      'AL30D':'09/07/2030','AL35D':'09/07/2035','AE38D':'09/07/2038',
-      'AL41D':'09/07/2041',
-      'CO26D':'27/10/2026','S24DD':'01/12/2027','PM29D':'19/03/2029',
-      'NDT5D':'27/04/2030','CO32D':'02/07/2032','BC33D':'26/11/2033',
-      'SFD4D':'11/12/2034','BA7DD':'01/09/2037',
+      'GD29D':'09/07/2029','GD30D':'09/07/2030','GD35D':'09/07/2035','GD38D':'09/07/2038','GD41D':'09/07/2041',
+      'AO27D':'29/10/2027','AL29D':'09/07/2029','AN29D':'30/11/2029','AL30D':'09/07/2030','AL35D':'09/07/2035','AE38D':'09/07/2038','AL41D':'09/07/2041',
+      'CO26D':'27/10/2026','S24DD':'01/12/2027','PM29D':'19/03/2029','NDT5D':'27/04/2030','CO32D':'02/07/2032','BC33D':'26/11/2033','SFD4D':'11/12/2034','BA7DD':'01/09/2037',
     };
-
-    /* Nombre de provincia por ticker subsoberano */
     var SUBSOV_ISSUER = {
-      'CO26D':'Córdoba','S24DD':'Salta','PM29D':'Mendoza','NDT5D':'Neuquén',
-      'CO32D':'Córdoba','BC33D':'CABA','SFD4D':'Santa Fe','BA7DD':'Buenos Aires',
+      'CO26D':'C\u00F3rdoba','S24DD':'Salta','PM29D':'Mendoza','NDT5D':'Neuqu\u00E9n',
+      'CO32D':'C\u00F3rdoba','BC33D':'CABA','SFD4D':'Santa Fe','BA7DD':'Buenos Aires',
     };
 
+    // --- BOND CATALOG (flujos del Excel) ---
     var BOND_CATALOG = {
-      'AE38D': { tir: 10.9672, flows: [{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}] },
-      'AL29D': { tir:  8.9594, flows: [{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}] },
-      'AL30D': { tir:  9.8401, flows: [{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}] },
-      'AL35D': { tir: 10.5896, flows: [{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}] },
-      'AL41D': { tir: 10.7506, flows: [{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}] },
-      'AN29D': { tir:  9.5939, flows: [{"date":"2026-05-30","flow":0.0303},{"date":"2026-11-30","flow":0.0325},{"date":"2027-05-30","flow":0.0325},{"date":"2027-11-30","flow":0.0325},{"date":"2028-05-30","flow":0.0325},{"date":"2028-11-30","flow":0.0325},{"date":"2029-05-30","flow":0.0325},{"date":"2029-11-30","flow":1.0325}] },
-      'AO27D': { tir:  5.1798, flows: [{"date":"2026-03-31","flow":0.0057},{"date":"2026-04-30","flow":0.005},{"date":"2026-05-29","flow":0.0048},{"date":"2026-06-30","flow":0.0052},{"date":"2026-07-31","flow":0.005},{"date":"2026-08-31","flow":0.005},{"date":"2026-09-30","flow":0.005},{"date":"2026-10-30","flow":0.005},{"date":"2026-11-30","flow":0.005},{"date":"2026-12-30","flow":0.005},{"date":"2027-01-29","flow":0.0048},{"date":"2027-02-26","flow":0.0045},{"date":"2027-03-31","flow":0.0058},{"date":"2027-04-30","flow":0.005},{"date":"2027-05-31","flow":0.005},{"date":"2027-06-30","flow":0.005},{"date":"2027-07-30","flow":0.005},{"date":"2027-08-31","flow":0.005},{"date":"2027-09-30","flow":0.005},{"date":"2027-10-29","flow":1.0048}] },
-      'GD29D': { tir:  7.3128, flows: [{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}] },
-      'GD30D': { tir:  8.4977, flows: [{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}] },
-      'GD35D': { tir: 10.1893, flows: [{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}] },
-      'GD38D': { tir: 10.2549, flows: [{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}] },
-      'GD41D': { tir: 10.4493, flows: [{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}] },
-      /* ── Subsoberanos (Flujo Provinciales) ── */
-      'CO26D': { tir:  1.1897, flows: [{"date":"2026-04-27","flow":0.0329},{"date":"2026-07-27","flow":0.0324},{"date":"2026-10-27","flow":0.0318}] },
-      'S24DD': { tir:  5.9195, flows: [{"date":"2026-06-01","flow":0.1463},{"date":"2026-12-01","flow":0.1409},{"date":"2027-06-01","flow":0.1356},{"date":"2027-12-01","flow":0.1303}] },
-      'PM29D': { tir: 22.5503, flows: [{"date":"2026-03-19","flow":0.0924},{"date":"2026-09-19","flow":0.0902},{"date":"2027-03-19","flow":0.088},{"date":"2027-09-19","flow":0.0858},{"date":"2028-03-19","flow":0.0836},{"date":"2028-09-19","flow":0.0813},{"date":"2029-03-19","flow":0.0791}] },
-      'NDT5D': { tir:  5.67,   flows: [{"date":"2026-04-27","flow":0.1007},{"date":"2026-10-27","flow":0.0981},{"date":"2027-04-27","flow":0.0954},{"date":"2027-10-27","flow":0.0928},{"date":"2028-04-27","flow":0.0901},{"date":"2028-10-27","flow":0.0875},{"date":"2029-04-27","flow":0.0849},{"date":"2029-10-27","flow":0.0822},{"date":"2030-04-27","flow":0.0796}] },
-      'CO32D': { tir:  8.122,  flows: [{"date":"2026-07-02","flow":0.0488},{"date":"2027-01-02","flow":0.0488},{"date":"2027-07-02","flow":0.0488},{"date":"2028-01-02","flow":0.0488},{"date":"2028-07-02","flow":0.0488},{"date":"2029-01-02","flow":0.0488},{"date":"2029-07-02","flow":0.0488},{"date":"2030-01-02","flow":0.0488},{"date":"2030-07-02","flow":0.3788},{"date":"2031-01-02","flow":0.0327},{"date":"2031-07-02","flow":0.3627},{"date":"2032-01-02","flow":0.0166},{"date":"2032-07-02","flow":0.3566}] },
-      'BC33D': { tir:  6.8718, flows: [{"date":"2026-05-26","flow":0.039},{"date":"2026-11-26","flow":0.039},{"date":"2027-05-26","flow":0.039},{"date":"2027-11-26","flow":0.039},{"date":"2028-05-26","flow":0.039},{"date":"2028-11-26","flow":0.039},{"date":"2029-05-26","flow":0.039},{"date":"2029-11-26","flow":0.039},{"date":"2030-05-26","flow":0.039},{"date":"2030-11-26","flow":0.039},{"date":"2031-05-26","flow":0.039},{"date":"2031-11-26","flow":0.3723},{"date":"2032-05-26","flow":0.026},{"date":"2032-11-26","flow":0.3593},{"date":"2033-05-26","flow":0.013},{"date":"2033-11-26","flow":0.3464}] },
-      'SFD4D': { tir:  8.1953, flows: [{"date":"2026-06-11","flow":0.0405},{"date":"2026-12-11","flow":0.0405},{"date":"2027-06-11","flow":0.0405},{"date":"2027-12-11","flow":0.0405},{"date":"2028-06-11","flow":0.0405},{"date":"2028-12-11","flow":0.0405},{"date":"2029-06-11","flow":0.0405},{"date":"2029-12-11","flow":0.0405},{"date":"2030-06-11","flow":0.0405},{"date":"2030-12-11","flow":0.0405},{"date":"2031-06-11","flow":0.0405},{"date":"2031-12-11","flow":0.2905},{"date":"2032-06-11","flow":0.0304},{"date":"2032-12-11","flow":0.2804},{"date":"2033-06-11","flow":0.0203},{"date":"2033-12-11","flow":0.2703},{"date":"2034-06-11","flow":0.0101},{"date":"2034-12-11","flow":0.2601}] },
-      'BA7DD': { tir: 12.2713, flows: [{"date":"2026-09-01","flow":0.0585},{"date":"2027-03-01","flow":0.0613},{"date":"2027-09-01","flow":0.0602},{"date":"2028-03-01","flow":0.061},{"date":"2028-09-01","flow":0.0599},{"date":"2029-03-01","flow":0.0619},{"date":"2029-09-01","flow":0.0607},{"date":"2030-03-01","flow":0.0523},{"date":"2030-09-01","flow":0.0513},{"date":"2031-03-01","flow":0.0554},{"date":"2031-09-01","flow":0.0542},{"date":"2032-03-01","flow":0.0548},{"date":"2032-09-01","flow":0.0536},{"date":"2033-03-01","flow":0.054},{"date":"2033-09-01","flow":0.0527},{"date":"2034-03-01","flow":0.054},{"date":"2034-09-01","flow":0.0526},{"date":"2035-03-01","flow":0.0532},{"date":"2035-09-01","flow":0.0518},{"date":"2036-03-01","flow":0.053},{"date":"2036-09-01","flow":0.0514},{"date":"2037-03-01","flow":0.0515},{"date":"2037-09-01","flow":0.0499}] },
+      'AE38D':{tir:10.9672,flows:[{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}]},
+      'AL29D':{tir:8.9594,flows:[{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}]},
+      'AL30D':{tir:9.8401,flows:[{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}]},
+      'AL35D':{tir:10.5896,flows:[{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}]},
+      'AL41D':{tir:10.7506,flows:[{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}]},
+      'AN29D':{tir:9.5939,flows:[{"date":"2026-05-30","flow":0.0303},{"date":"2026-11-30","flow":0.0325},{"date":"2027-05-30","flow":0.0325},{"date":"2027-11-30","flow":0.0325},{"date":"2028-05-30","flow":0.0325},{"date":"2028-11-30","flow":0.0325},{"date":"2029-05-30","flow":0.0325},{"date":"2029-11-30","flow":1.0325}]},
+      'AO27D':{tir:5.1798,flows:[{"date":"2026-03-31","flow":0.0057},{"date":"2026-04-30","flow":0.005},{"date":"2026-05-29","flow":0.0048},{"date":"2026-06-30","flow":0.0052},{"date":"2026-07-31","flow":0.005},{"date":"2026-08-31","flow":0.005},{"date":"2026-09-30","flow":0.005},{"date":"2026-10-30","flow":0.005},{"date":"2026-11-30","flow":0.005},{"date":"2026-12-30","flow":0.005},{"date":"2027-01-29","flow":0.0048},{"date":"2027-02-26","flow":0.0045},{"date":"2027-03-31","flow":0.0058},{"date":"2027-04-30","flow":0.005},{"date":"2027-05-31","flow":0.005},{"date":"2027-06-30","flow":0.005},{"date":"2027-07-30","flow":0.005},{"date":"2027-08-31","flow":0.005},{"date":"2027-09-30","flow":0.005},{"date":"2027-10-29","flow":1.0048}]},
+      'GD29D':{tir:7.3128,flows:[{"date":"2026-07-09","flow":0.1035},{"date":"2027-01-09","flow":0.103},{"date":"2027-07-09","flow":0.1025},{"date":"2028-01-09","flow":0.102},{"date":"2028-07-09","flow":0.1015},{"date":"2029-01-09","flow":0.101},{"date":"2029-07-09","flow":0.1005}]},
+      'GD30D':{tir:8.4977,flows:[{"date":"2026-07-09","flow":0.0827},{"date":"2027-01-09","flow":0.0824},{"date":"2027-07-09","flow":0.0821},{"date":"2028-01-09","flow":0.0842},{"date":"2028-07-09","flow":0.0835},{"date":"2029-01-09","flow":0.0828},{"date":"2029-07-09","flow":0.0821},{"date":"2030-01-09","flow":0.0814},{"date":"2030-07-09","flow":0.0807}]},
+      'GD35D':{tir:10.1893,flows:[{"date":"2026-07-09","flow":0.0206},{"date":"2027-01-09","flow":0.0206},{"date":"2027-07-09","flow":0.0206},{"date":"2028-01-09","flow":0.0238},{"date":"2028-07-09","flow":0.0238},{"date":"2029-01-09","flow":0.025},{"date":"2029-07-09","flow":0.025},{"date":"2030-01-09","flow":0.025},{"date":"2030-07-09","flow":0.025},{"date":"2031-01-09","flow":0.125},{"date":"2031-07-09","flow":0.1225},{"date":"2032-01-09","flow":0.12},{"date":"2032-07-09","flow":0.1175},{"date":"2033-01-09","flow":0.115},{"date":"2033-07-09","flow":0.1125},{"date":"2034-01-09","flow":0.11},{"date":"2034-07-09","flow":0.1075},{"date":"2035-01-09","flow":0.105},{"date":"2035-07-09","flow":0.1025}]},
+      'GD38D':{tir:10.2549,flows:[{"date":"2026-07-09","flow":0.025},{"date":"2027-01-09","flow":0.025},{"date":"2027-07-09","flow":0.0705},{"date":"2028-01-09","flow":0.0693},{"date":"2028-07-09","flow":0.0682},{"date":"2029-01-09","flow":0.067},{"date":"2029-07-09","flow":0.0659},{"date":"2030-01-09","flow":0.0648},{"date":"2030-07-09","flow":0.0636},{"date":"2031-01-09","flow":0.0625},{"date":"2031-07-09","flow":0.0614},{"date":"2032-01-09","flow":0.0602},{"date":"2032-07-09","flow":0.0591},{"date":"2033-01-09","flow":0.058},{"date":"2033-07-09","flow":0.0568},{"date":"2034-01-09","flow":0.0557},{"date":"2034-07-09","flow":0.0545},{"date":"2035-01-09","flow":0.0534},{"date":"2035-07-09","flow":0.0523},{"date":"2036-01-09","flow":0.0511},{"date":"2036-07-09","flow":0.05},{"date":"2037-01-09","flow":0.0489},{"date":"2037-07-09","flow":0.0477},{"date":"2038-01-09","flow":0.0466}]},
+      'GD41D':{tir:10.4493,flows:[{"date":"2026-07-09","flow":0.0175},{"date":"2027-01-09","flow":0.0175},{"date":"2027-07-09","flow":0.0175},{"date":"2028-01-09","flow":0.0532},{"date":"2028-07-09","flow":0.0526},{"date":"2029-01-09","flow":0.052},{"date":"2029-07-09","flow":0.0513},{"date":"2030-01-09","flow":0.0566},{"date":"2030-07-09","flow":0.0557},{"date":"2031-01-09","flow":0.0549},{"date":"2031-07-09","flow":0.054},{"date":"2032-01-09","flow":0.0531},{"date":"2032-07-09","flow":0.0523},{"date":"2033-01-09","flow":0.0514},{"date":"2033-07-09","flow":0.0505},{"date":"2034-01-09","flow":0.0496},{"date":"2034-07-09","flow":0.0488},{"date":"2035-01-09","flow":0.0479},{"date":"2035-07-09","flow":0.047},{"date":"2036-01-09","flow":0.0462},{"date":"2036-07-09","flow":0.0453},{"date":"2037-01-09","flow":0.0444},{"date":"2037-07-09","flow":0.0435},{"date":"2038-01-09","flow":0.0427},{"date":"2038-07-09","flow":0.0418},{"date":"2039-01-09","flow":0.0409},{"date":"2039-07-09","flow":0.0401},{"date":"2040-01-09","flow":0.0392},{"date":"2040-07-09","flow":0.0383},{"date":"2041-01-09","flow":0.0375},{"date":"2041-07-09","flow":0.0366}]},
+      'CO26D':{tir:1.1897,flows:[{"date":"2026-04-27","flow":0.0329},{"date":"2026-07-27","flow":0.0324},{"date":"2026-10-27","flow":0.0318}]},
+      'S24DD':{tir:5.9195,flows:[{"date":"2026-06-01","flow":0.1463},{"date":"2026-12-01","flow":0.1409},{"date":"2027-06-01","flow":0.1356},{"date":"2027-12-01","flow":0.1303}]},
+      'PM29D':{tir:22.5503,flows:[{"date":"2026-03-19","flow":0.0924},{"date":"2026-09-19","flow":0.0902},{"date":"2027-03-19","flow":0.088},{"date":"2027-09-19","flow":0.0858},{"date":"2028-03-19","flow":0.0836},{"date":"2028-09-19","flow":0.0813},{"date":"2029-03-19","flow":0.0791}]},
+      'NDT5D':{tir:5.67,flows:[{"date":"2026-04-27","flow":0.1007},{"date":"2026-10-27","flow":0.0981},{"date":"2027-04-27","flow":0.0954},{"date":"2027-10-27","flow":0.0928},{"date":"2028-04-27","flow":0.0901},{"date":"2028-10-27","flow":0.0875},{"date":"2029-04-27","flow":0.0849},{"date":"2029-10-27","flow":0.0822},{"date":"2030-04-27","flow":0.0796}]},
+      'CO32D':{tir:8.122,flows:[{"date":"2026-07-02","flow":0.0488},{"date":"2027-01-02","flow":0.0488},{"date":"2027-07-02","flow":0.0488},{"date":"2028-01-02","flow":0.0488},{"date":"2028-07-02","flow":0.0488},{"date":"2029-01-02","flow":0.0488},{"date":"2029-07-02","flow":0.0488},{"date":"2030-01-02","flow":0.0488},{"date":"2030-07-02","flow":0.3788},{"date":"2031-01-02","flow":0.0327},{"date":"2031-07-02","flow":0.3627},{"date":"2032-01-02","flow":0.0166},{"date":"2032-07-02","flow":0.3566}]},
+      'BC33D':{tir:6.8718,flows:[{"date":"2026-05-26","flow":0.039},{"date":"2026-11-26","flow":0.039},{"date":"2027-05-26","flow":0.039},{"date":"2027-11-26","flow":0.039},{"date":"2028-05-26","flow":0.039},{"date":"2028-11-26","flow":0.039},{"date":"2029-05-26","flow":0.039},{"date":"2029-11-26","flow":0.039},{"date":"2030-05-26","flow":0.039},{"date":"2030-11-26","flow":0.039},{"date":"2031-05-26","flow":0.039},{"date":"2031-11-26","flow":0.3723},{"date":"2032-05-26","flow":0.026},{"date":"2032-11-26","flow":0.3593},{"date":"2033-05-26","flow":0.013},{"date":"2033-11-26","flow":0.3464}]},
+      'SFD4D':{tir:8.1953,flows:[{"date":"2026-06-11","flow":0.0405},{"date":"2026-12-11","flow":0.0405},{"date":"2027-06-11","flow":0.0405},{"date":"2027-12-11","flow":0.0405},{"date":"2028-06-11","flow":0.0405},{"date":"2028-12-11","flow":0.0405},{"date":"2029-06-11","flow":0.0405},{"date":"2029-12-11","flow":0.0405},{"date":"2030-06-11","flow":0.0405},{"date":"2030-12-11","flow":0.0405},{"date":"2031-06-11","flow":0.0405},{"date":"2031-12-11","flow":0.2905},{"date":"2032-06-11","flow":0.0304},{"date":"2032-12-11","flow":0.2804},{"date":"2033-06-11","flow":0.0203},{"date":"2033-12-11","flow":0.2703},{"date":"2034-06-11","flow":0.0101},{"date":"2034-12-11","flow":0.2601}]},
+      'BA7DD':{tir:12.2713,flows:[{"date":"2026-09-01","flow":0.0585},{"date":"2027-03-01","flow":0.0613},{"date":"2027-09-01","flow":0.0602},{"date":"2028-03-01","flow":0.061},{"date":"2028-09-01","flow":0.0599},{"date":"2029-03-01","flow":0.0619},{"date":"2029-09-01","flow":0.0607},{"date":"2030-03-01","flow":0.0523},{"date":"2030-09-01","flow":0.0513},{"date":"2031-03-01","flow":0.0554},{"date":"2031-09-01","flow":0.0542},{"date":"2032-03-01","flow":0.0548},{"date":"2032-09-01","flow":0.0536},{"date":"2033-03-01","flow":0.054},{"date":"2033-09-01","flow":0.0527},{"date":"2034-03-01","flow":0.054},{"date":"2034-09-01","flow":0.0526},{"date":"2035-03-01","flow":0.0532},{"date":"2035-09-01","flow":0.0518},{"date":"2036-03-01","flow":0.053},{"date":"2036-09-01","flow":0.0514},{"date":"2037-03-01","flow":0.0515},{"date":"2037-09-01","flow":0.0499}]},
     };
 
-    /**
-     * Calcula TIR exacta usando Newton-Raphson con los flujos reales del Excel.
-     * @param {string} symbol  - Ticker (ej: "GD30D")
-     * @param {number} price   - Precio actual de la API (USD por $100 VN)
-     * @returns {number|null}  - TIR en % anual
-     */
+    // --- YTM CALC ---
     function calcYTM(symbol, price) {
-      var b  = BOND_CATALOG[symbol ? symbol.toUpperCase() : ''];
-      if (!b || !b.flows || b.flows.length === 0) { return null; }
-
-      // API devuelve precio por c/100 VN, flujos del Excel son por c/1 VN
-      // Normalizar dividiendo precio por 100
-      var px = parseFloat(price) / 100;
-      if (isNaN(px) || px <= 0) { return null; }
-
-      var today = new Date().getTime();
-
-      // Construir array de {t (años), flow} con fechas reales
-      var cashflows = [];
-      b.flows.forEach(function(f) {
-        var d = new Date(f.date).getTime();
-        var t = (d - today) / (365.25 * 24 * 3600 * 1000);
-        if (t > 0) {
-          cashflows.push({ t: t, flow: f.flow });
-        }
+      var b=BOND_CATALOG[symbol?symbol.toUpperCase():''];
+      if(!b||!b.flows||b.flows.length===0){return null;}
+      var px=parseFloat(price)/100;
+      if(isNaN(px)||px<=0){return null;}
+      var today=new Date().getTime();
+      var cf=[];
+      b.flows.forEach(function(f){
+        var t=(new Date(f.date).getTime()-today)/(365.25*24*3600*1000);
+        if(t>0){cf.push({t:t,flow:f.flow});}
       });
-
-      if (cashflows.length === 0) { return null; }
-
-      // PV(y) - precio = 0  →  Newton-Raphson
-      function pv(y) {
-        return cashflows.reduce(function(acc, cf) {
-          return acc + cf.flow / Math.pow(1 + y, cf.t);
-        }, 0);
+      if(cf.length===0){return null;}
+      function pv(y){return cf.reduce(function(a,c){return a+c.flow/Math.pow(1+y,c.t);},0);}
+      function dpv(y){return cf.reduce(function(a,c){return a-c.t*c.flow/Math.pow(1+y,c.t+1);},0);}
+      var y=0.10;
+      for(var i=0;i<100;i++){
+        var f=pv(y)-px,df=dpv(y);
+        if(Math.abs(df)<1e-14){break;}
+        var yn=y-f/df;
+        if(yn<-0.99){yn=-0.99;}if(yn>10){yn=10;}
+        if(Math.abs(yn-y)<1e-10){y=yn;break;}
+        y=yn;
       }
-
-      function dpv(y) {
-        return cashflows.reduce(function(acc, cf) {
-          return acc - cf.t * cf.flow / Math.pow(1 + y, cf.t + 1);
-        }, 0);
-      }
-
-      var y = 0.10;
-      for (var i = 0; i < 100; i++) {
-        var f  = pv(y) - px;
-        var df = dpv(y);
-        if (Math.abs(df) < 1e-14) { break; }
-        var yn = y - f / df;
-        if (yn < -0.99) { yn = -0.99; }
-        if (yn > 10.0)  { yn = 10.0;  }
-        if (Math.abs(yn - y) < 1e-10) { y = yn; break; }
-        y = yn;
-      }
-
-      if (isNaN(y) || y < -0.99 || y > 10) { return null; }
-      return y * 100;
+      if(isNaN(y)||y<-0.99||y>10){return null;}
+      return y*100;
     }
 
-    /**
-     * Formatea la TIR para mostrar en tabla.
-     */
-    function fmtYTM(symbol, price) {
-      var tir = calcYTM(symbol, price);
-      if (tir === null) {
-        // Si no hay precio de API, usar TIR de referencia del Excel
-        var b = BOND_CATALOG[symbol ? symbol.toUpperCase() : ''];
-        if (b && b.tir) {
-          return '<span class="text-[#3d5a73] text-[10px]" title="TIR de referencia (sin precio live)">'
-               + b.tir.toFixed(2) + '%*</span>';
-        }
-        return '<span class="var-neutral">—</span>';
+    function fmtYTM(symbol,price) {
+      var tir=calcYTM(symbol,price);
+      if(tir===null){
+        var b=BOND_CATALOG[symbol?symbol.toUpperCase():''];
+        if(b&&b.tir){return '<span style="color:var(--text-muted);font-size:0.7rem" title="TIR de referencia">'+b.tir.toFixed(2)+'%*</span>';}
+        return '<span class="var-neutral">&mdash;</span>';
       }
-      var cls = tir > 15 ? 'text-[#c9943a]'
-              : tir > 10 ? 'text-[#86afce]'
-              : 'text-[#dce8f2]';
-      return '<span class="' + cls + ' font-semibold">' + tir.toFixed(2) + '%</span>';
+      var cls=tir>15?'color:#c9943a':tir>10?'color:#86afce':'color:var(--text-primary)';
+      return '<span style="'+cls+';font-weight:600">'+tir.toFixed(2)+'%</span>';
     }
 
-    /**
-     * Render especial para tablas de bonos con columna TIR.
-     * Misma logica que renderTable pero con columna extra.
-     */
-    function renderBondsTable(section, items) {
-      if (!items || items.length === 0) {
-        section.tableEl.innerHTML =
-          '<div class="px-6 py-10 text-center font-display text-[11px] '
-          + 'tracking-widest uppercase text-[#1e3a52]">Sin datos disponibles</div>';
-        return;
-      }
-
-      var activeSortKey = section.sortKey || null;
-      var activeSortDir = section.sortDir || 'asc';
-
-      var BOND_COLS = [
-        { key:'symbol',   label:'Símbolo',    align:'left',  optional:false, isTir:false, isMat:false },
-        { key:'maturity', label:'Vencimiento', align:'left',  optional:true,  isTir:false, isMat:true  },
-        { key:'last',     label:'Precio',      align:'right', optional:false, isTir:false, isMat:false },
-        { key:'tir',      label:'TIR',         align:'right', optional:false, isTir:true,  isMat:false },
-        { key:'change',   label:'Var %',        align:'right', optional:false, isTir:false, isMat:false },
-      ];
-
-      if (section.isSubsov) {
-        BOND_COLS.splice(1, 0, { key:'issuer', label:'Emisor', align:'left', optional:false, isTir:false, isMat:false });
-      }
-
-      var html = '<table class="market-table"><thead><tr>';
-
-      BOND_COLS.forEach(function(col) {
-        var optClass   = col.optional ? ' col-optional' : '';
-        var alignClass = col.align === 'right' ? ' text-right' : '';
-        var isSorted   = (col.key === activeSortKey);
-        var sortClass  = isSorted ? ' sorted' : '';
-        var isSpecial  = col.isTir || col.isMat || col.key === 'issuer';
-        var thClass    = isSpecial ? (optClass + alignClass) : ('sortable' + optClass + alignClass + sortClass);
-        var dataKey    = isSpecial ? '' : ' data-key="' + col.key + '"';
-        var icon       = isSpecial ? '' : ('<span class="sort-icon">' + (isSorted ? (activeSortDir === 'asc' ? '↑' : '↓') : '⇅') + '</span>');
-
-        html += '<th class="' + thClass + '"' + dataKey + '>' + col.label + icon + '</th>';
-      });
-
-      html += '</tr></thead><tbody>';
-
-      items.forEach(function(raw) {
-        var item    = normalizeItem(raw);
-        var sym     = item.symbol ? item.symbol.toUpperCase() : '';
-        var matDate = BOND_MATURITY[sym] || '—';
-        html += '<tr>';
-        html += '<td class="col-symbol">' + item.symbol + '</td>';
-        if (section.isSubsov) {
-          html += '<td class="font-body text-[11px]" style="color:var(--text-secondary)">' + (SUBSOV_ISSUER[sym] || '—') + '</td>';
-        }
-        html += '<td class="col-optional font-data text-[11px]" style="color:var(--text-muted)">' + matDate + '</td>';
-        html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
-        html += '<td class="text-right font-data">' + fmtYTM(item.symbol, item.last) + '</td>';
-        html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
-        html += '</tr>';
-      });
-
-      html += '</tbody></table>';
-      section.tableEl.innerHTML = html;
-      attachSortListeners(section.tableEl, section);
-    }
-
-
-    /* ----------------------------------------------------------
-       BONOS SOBERANOS: filtros por Ley
-       Los tickers se filtran del endpoint arg_bonds
-    ---------------------------------------------------------- */
+    // --- BOND TICKERS ---
     var BONDS_NY     = ['GD29D','GD30D','GD35D','GD38D','GD41D'];
     var BONDS_ARG    = ['AO27D','AL29D','AN29D','AL30D','AL35D','AE38D','AL41D'];
     var BONDS_SUBSOV = ['CO26D','S24DD','PM29D','NDT5D','CO32D','BC33D','SFD4D','BA7DD'];
 
-    /**
-     * Renderiza las dos sub-tablas de bonos soberanos.
-     * Filtra los items crudos por lista de tickers.
-     */
+    // --- RENDER BONDS TABLE ---
+    function renderBondsTable(section,items) {
+      if(!items||items.length===0){section.tableEl.innerHTML='<div class="px-6 py-10 text-center font-display text-[11px] tracking-widest uppercase" style="color:var(--text-muted)">Sin datos disponibles</div>';return;}
+      var ask=section.sortKey,adir=section.sortDir;
+      var COLS=[
+        {key:'symbol',  label:'S\u00EDmbolo',   align:'left',  opt:false,spec:false},
+        {key:'maturity',label:'Vencimiento',     align:'left',  opt:true, spec:true },
+        {key:'last',    label:'Precio',          align:'right', opt:false,spec:false},
+        {key:'tir',     label:'TIR',             align:'right', opt:false,spec:true },
+        {key:'change',  label:'Var %',           align:'right', opt:false,spec:false},
+      ];
+      if(section.isSubsov){COLS.splice(1,0,{key:'issuer',label:'Emisor',align:'left',opt:false,spec:true});}
+      var html='<table class="market-table"><thead><tr>';
+      COLS.forEach(function(c){
+        var oc=c.opt?' col-optional':'',ac=c.align==='right'?' text-right':'';
+        var isSorted=c.key===ask,sc=isSorted?' sorted':'';
+        var thCls=c.spec?(oc+ac):('sortable'+oc+ac+sc);
+        var dkey=c.spec?'':' data-key="'+c.key+'"';
+        var icon=c.spec?'':'<span class="sort-icon">'+(isSorted?(adir==='asc'?'&#8593;':'&#8595;'):'&#8645;')+'</span>';
+        html+='<th class="'+thCls+'"'+dkey+'>'+c.label+icon+'</th>';
+      });
+      html+='</tr></thead><tbody>';
+      items.forEach(function(raw){
+        var item=normalizeItem(raw);
+        var sym=item.symbol?item.symbol.toUpperCase():'';
+        var mat=BOND_MATURITY[sym]||'&mdash;';
+        html+='<tr><td class="col-symbol">'+item.symbol+'</td>';
+        if(section.isSubsov){html+='<td class="font-body text-[11px]" style="color:var(--text-secondary)">'+(SUBSOV_ISSUER[sym]||'&mdash;')+'</td>';}
+        html+='<td class="col-optional font-data text-[11px]" style="color:var(--text-muted)">'+mat+'</td>';
+        html+='<td class="text-right font-data">'+fmtPrice(item.last)+'</td>';
+        html+='<td class="text-right font-data">'+fmtYTM(item.symbol,item.last)+'</td>';
+        html+='<td class="text-right font-data">'+fmtChange(item.change)+'</td>';
+        html+='</tr>';
+      });
+      html+='</tbody></table>';
+      section.tableEl.innerHTML=html;
+      attachSortListeners(section.tableEl,section);
+    }
+
+    // --- RENDER BOND SUBSECTIONS ---
     function renderBondSubsections(allItems) {
-      var nySection = {
-        tableEl: document.getElementById('table-bonds-ny'),
-        errorEl: document.getElementById('error-bonds-ny'),
-        statsEl: null, sortKey: null, sortDir: 'asc', rawData: null, label: 'Ley NY'
-      };
-      var argSection = {
-        tableEl: document.getElementById('table-bonds-arg'),
-        errorEl: document.getElementById('error-bonds-arg'),
-        statsEl: null, sortKey: null, sortDir: 'asc', rawData: null, label: 'Ley ARG'
-      };
-      var subsovSection = {
-        tableEl:  document.getElementById('table-subsov'),
-        errorEl:  document.getElementById('error-subsov'),
-        statsEl:  document.getElementById('stats-subsov'),
-        sortKey:  null, sortDir: 'asc', rawData: null,
-        label:    'Subsoberanos', isSubsov: true
-      };
-
-      function filterBy(arr) {
-        return allItems.filter(function(item) {
-          var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
-          return arr.indexOf(sym) !== -1;
+      function mkSection(tableId,errorId,statsId,label,isSubsov){
+        return {tableEl:document.getElementById(tableId),errorEl:document.getElementById(errorId),statsEl:statsId?document.getElementById(statsId):null,sortKey:null,sortDir:'asc',rawData:null,label:label,isSubsov:!!isSubsov};
+      }
+      function filterBy(arr){
+        return allItems.filter(function(item){
+          var sym=(item.symbol||item.ticker||item.simbolo||item.id||'').toUpperCase();
+          return arr.indexOf(sym)!==-1;
         });
       }
-
-      nySection.rawData     = filterBy(BONDS_NY);
-      argSection.rawData    = filterBy(BONDS_ARG);
-      subsovSection.rawData = filterBy(BONDS_SUBSOV);
-
-      window._bondNySection     = nySection;
-      window._bondArgSection    = argSection;
-      window._bondSubsovSection = subsovSection;
-
-      renderBondsTable(nySection,     nySection.rawData);
-      renderBondsTable(argSection,    argSection.rawData);
-      renderBondsTable(subsovSection, subsovSection.rawData);
+      var ny  =mkSection('table-bonds-ny', 'error-bonds-ny', null, 'Ley NY');
+      var arg =mkSection('table-bonds-arg','error-bonds-arg',null, 'Ley ARG');
+      var sub =mkSection('table-subsov',   'error-subsov',   'stats-subsov','Subsoberanos',true);
+      ny.rawData  =filterBy(BONDS_NY);
+      arg.rawData =filterBy(BONDS_ARG);
+      sub.rawData =filterBy(BONDS_SUBSOV);
+      renderBondsTable(ny,  ny.rawData);
+      renderBondsTable(arg, arg.rawData);
+      renderBondsTable(sub, sub.rawData);
     }
 
-    /** Carga todas las secciones en paralelo */
+    // --- LOAD ALL ---
     function loadAllSections() {
-
-      // ── Bonos + Subsoberanos: mismo endpoint arg_bonds, split en JS ─
-      var bondsSection = SECTIONS.bonds;
-      bondsSection.errorEl.classList.add('hidden');
-      bondsSection.errorEl.innerHTML = '';
-
-      // Skeleton solo en carga inicial (evita flash en refresh)
-      if (!bondsSection.rawData || bondsSection.rawData.length === 0) {
-        showSkeleton(document.getElementById('table-bonds-ny'));
-        showSkeleton(document.getElementById('table-bonds-arg'));
-        var subsovEl = document.getElementById('table-subsov');
-        if (subsovEl) { showSkeleton(subsovEl); }
+      // Bonds (NY + ARG + Subsov) from same endpoint
+      var bondsSection={url:API.bonds,rawData:null,errorEl:document.getElementById('error-bonds'),label:'Bonos'};
+      if(!bondsSection.rawData||bondsSection.rawData.length===0){
+        ['table-bonds-ny','table-bonds-arg','table-subsov'].forEach(function(id){var el=document.getElementById(id);if(el)showSkeleton(el);});
       }
-
-      fetch(bondsSection.url)
-        .then(function(res) {
-          if (!res.ok) { throw new Error('HTTP ' + res.status); }
-          return res.json();
+      fetch(API.bonds)
+        .then(function(r){if(!r.ok){throw new Error('HTTP '+r.status);}return r.json();})
+        .then(function(data){
+          var items=Array.isArray(data)?data:data.data||data.items||data.result||[];
+          bondsSection.rawData=items;
+          try{renderBondSubsections(items);}catch(e){console.error('bonds render:',e.message);}
+          try{renderStats({rawData:items,statsEl:document.getElementById('stats-bonds'),label:'Bonos Soberanos'});}catch(e){}
         })
-        .then(function(data) {
-          var items = Array.isArray(data) ? data
-                    : data.data   ? data.data
-                    : data.items  ? data.items
-                    : data.result ? data.result
-                    : [];
-
-          bondsSection.rawData = items;
-          bondsSection.sortKey = null;
-          bondsSection.sortDir = 'asc';
-
-          try { renderBondSubsections(items); } catch(e) {
-            console.error('[LV Capital] renderBondSubsections:', e.message);
-          }
-          try { renderStats(bondsSection); } catch(e) {}
-
-          console.info(
-            '%c LV Capital %c bonds OK · ' + items.length + ' instrumentos',
-            'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
-            'color:#3d5a73'
-          );
-        })
-        .catch(function(err) {
-          console.error('[LV Capital] Error fetch bonds:', err.message);
-          var msg = err.message || 'No se pudo conectar con data912.com';
-          [
-            { tableEl: document.getElementById('table-bonds-ny'),  errorEl: document.getElementById('error-bonds-ny'),  label: 'Bonos Ley NY'  },
-            { tableEl: document.getElementById('table-bonds-arg'), errorEl: document.getElementById('error-bonds-arg'), label: 'Bonos Ley ARG' },
-            { tableEl: document.getElementById('table-subsov'),    errorEl: document.getElementById('error-subsov'),    label: 'Subsoberanos'  },
-          ].forEach(function(s) { if (s.tableEl) { s.tableEl.innerHTML = ''; showError(s, msg); } });
+        .catch(function(err){
+          var msg=err.message||'No se pudo conectar';
+          [['table-bonds-ny','error-bonds-ny','Bonos Ley NY'],['table-bonds-arg','error-bonds-arg','Bonos Ley ARG'],['table-subsov','error-subsov','Subsoberanos']].forEach(function(x){
+            var s={tableEl:document.getElementById(x[0]),errorEl:document.getElementById(x[1]),label:x[2]};
+            if(s.tableEl)showError(s,msg);
+          });
         });
-
-      // ── Letras, Acciones, CEDears: carga normal ────────────────────
-      ['notes','stocks','cedears'].forEach(function(key) {
-        loadSection(key);
-      });
+      // Other sections
+      ['notes','stocks','cedears'].forEach(function(k){loadSection(k);});
     }
 
-
-    /* ============================================================
-       PASO 5 - AUTO-REFRESH + COUNTDOWN BAR + RELOJ
-       ============================================================
-       Tres mecanismos coordinados:
-         1. RELOJ      : actualiza last-update-time cada segundo
-         2. COUNTDOWN  : cuenta regresiva visual de 30s hacia 0
-                         - barra de progreso (width 100% -> 0%)
-                         - numero de segundos en pantalla
-         3. AUTO-REFRESH: cada 30s llama a loadAllSections()
-                          y reinicia el countdown
-       El boton "Actualizar" del header hace un refresh manual
-       inmediato y tambien reinicia el countdown.
-       ============================================================ */
-
-
-    /* ------------------------------------------------------------
-       RELOJ - actualiza la hora de ultima actualizacion
-    ------------------------------------------------------------ */
-
-    function updateClock() {
-      var now  = new Date();
-      var hh   = String(now.getHours()).padStart(2, '0');
-      var mm   = String(now.getMinutes()).padStart(2, '0');
-      var ss   = String(now.getSeconds()).padStart(2, '0');
-      if (DOM.lastUpdateTime) {
-        DOM.lastUpdateTime.textContent = hh + ':' + mm + ':' + ss;
-      }
+    // --- CLOCK ---
+    function updateClock(){
+      var now=new Date(),el=document.getElementById('last-update-time');
+      if(el){el.textContent=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');}
     }
 
-
-    /* ------------------------------------------------------------
-       COUNTDOWN BAR
-       Anima la barra de progreso y el contador de segundos
-    ------------------------------------------------------------ */
-
-    function startCountdown() {
-      // Limpiar timer previo si existe
-      if (state.countdownTimer) {
-        clearInterval(state.countdownTimer);
-      }
-
-      // Resetear al maximo
-      state.countdownSecs = REFRESH_INTERVAL / 1000;
-      updateCountdownUI(state.countdownSecs);
-
-      state.countdownTimer = setInterval(function() {
-        state.countdownSecs -= 1;
-
-        if (state.countdownSecs <= 0) {
-          state.countdownSecs = 0;
-        }
-
-        updateCountdownUI(state.countdownSecs);
-      }, 1000);
-    }
-
-    function updateCountdownUI(secs) {
-      // Numero de segundos
-      if (DOM.countdownSeconds) {
-        DOM.countdownSeconds.textContent = secs;
-      }
-
-      // Barra de progreso: width en porcentaje
-      if (DOM.countdownBar) {
-        var pct = (secs / (REFRESH_INTERVAL / 1000)) * 100;
-        DOM.countdownBar.style.width = pct + '%';
-
-        // Cambia color cuando quedan menos de 5 segundos
-        if (secs <= 5) {
-          DOM.countdownBar.style.background = 'linear-gradient(90deg, #c9943a, #e0b85c)';
-        } else {
-          DOM.countdownBar.style.background = 'linear-gradient(90deg, #0d5184, #86afce)';
-        }
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       AUTO-REFRESH
-       Ejecuta loadAllSections() cada REFRESH_INTERVAL ms
-    ------------------------------------------------------------ */
-
-    function startAutoRefresh() {
-      // Limpiar timer previo si existe
-      if (state.refreshTimer) {
-        clearInterval(state.refreshTimer);
-      }
-
-      state.refreshTimer = setInterval(function() {
-        doRefresh();
-      }, REFRESH_INTERVAL);
-    }
-
-    /** Ejecuta un refresh completo */
-    function doRefresh() {
-      setRefreshSpinning(true);
+    // --- AUTO REFRESH ---
+    function doRefresh(){
+      var ic=document.getElementById('refresh-icon');
+      if(ic){ic.style.animation='spin 0.8s linear infinite';}
       loadAllSections();
+      loadGlobalMarkets();
       updateClock();
-      setTimeout(function() {
-        setRefreshSpinning(false);
-      }, 1500);
+      setTimeout(function(){if(ic){ic.style.animation='';}},1500);
     }
 
-    /** Activa o desactiva la animacion de spin en el icono refresh */
-    function setRefreshSpinning(spinning) {
-      if (!DOM.refreshIcon) { return; }
-      if (spinning) {
-        DOM.refreshIcon.style.animation = 'spin 0.8s linear infinite';
-      } else {
-        DOM.refreshIcon.style.animation = '';
-      }
-    }
-
-
-    /* ------------------------------------------------------------
-       BOTON REFRESH MANUAL
-    ------------------------------------------------------------ */
-
-    function initRefreshButton() {
-      if (!DOM.btnRefresh) { return; }
-
-      DOM.btnRefresh.addEventListener('click', function() {
-        // Reiniciar el auto-refresh para que cuente desde cero
-        startAutoRefresh();
-        doRefresh();
-      });
-    }
-
-
-    /* ------------------------------------------------------------
-       INICIALIZACION COMPLETA
-    ------------------------------------------------------------ */
-
-    /* ------------------------------------------------------------
-       MODO CLARO / OSCURO
-    ------------------------------------------------------------ */
-    function initTheme() {
-      var html     = document.documentElement;
-      var btnTheme = document.getElementById('btn-theme');
-      var iconSun  = document.getElementById('icon-sun');
-      var iconMoon = document.getElementById('icon-moon');
-
-      // Leer preferencia guardada o usar dark por defecto
-      var saved = localStorage.getItem('lv-theme') || 'dark';
-      applyTheme(saved);
-
-      if (btnTheme) {
-        btnTheme.addEventListener('click', function() {
-          var current = html.classList.contains('light') ? 'light' : 'dark';
-          var next    = current === 'dark' ? 'light' : 'dark';
-          applyTheme(next);
-          localStorage.setItem('lv-theme', next);
-        });
-      }
-
-      function applyTheme(theme) {
-        if (theme === 'light') {
-          html.classList.remove('dark');
-          html.classList.add('light');
-          if (iconSun)  { iconSun.classList.add('hidden'); }
-          if (iconMoon) { iconMoon.classList.remove('hidden'); }
-        } else {
-          html.classList.remove('light');
-          html.classList.add('dark');
-          if (iconSun)  { iconSun.classList.remove('hidden'); }
-          if (iconMoon) { iconMoon.classList.add('hidden'); }
-        }
-      }
-    }
-
+    // --- INIT ---
     document.addEventListener('DOMContentLoaded', function() {
-      initTheme();          // Tema claro/oscuro
-      initTabs();           // Paso 2: navegacion por tabs
-      loadAllSections();    // Paso 3: carga inicial de datos
-      updateClock();        // Paso 5: mostrar hora actual
-      startAutoRefresh();   // Paso 5: programar auto-refresh
-      initRefreshButton();  // Paso 5: boton manual
-
-      // Actualizar el reloj cada segundo (solo la hora, sin refetch)
+      initTheme();
+      initTabs();
+      loadAllSections();
+      loadGlobalMarkets();
+      updateClock();
       setInterval(updateClock, 1000);
-
-      console.info(
-        '%c LV Capital %c auto-refresh OK · cada 30s',
-        'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
-        'color:#3d5a73'
-      );
+      setInterval(doRefresh, REFRESH_INTERVAL);
+      var btnR=document.getElementById('btn-refresh');
+      if(btnR){btnR.addEventListener('click',doRefresh);}
     });
 
   </script>
-
 </body>
 </html>
