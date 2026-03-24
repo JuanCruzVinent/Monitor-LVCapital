@@ -2124,9 +2124,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       initTheme();          // Tema claro/oscuro
       initTabs();           // Paso 2: navegacion por tabs
-      subsovSection.tableEl = document.getElementById('table-subsov');
-      subsovSection.errorEl = document.getElementById('error-subsov');
-      subsovSection.statsEl = document.getElementById('stats-subsov');
       loadAllSections();    // Paso 3: carga inicial de datos
       updateClock();        // Paso 5: mostrar hora actual
       startAutoRefresh();   // Paso 5: programar auto-refresh
