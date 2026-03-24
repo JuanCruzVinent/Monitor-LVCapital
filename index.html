@@ -544,6 +544,7 @@
       aria-labelledby="tab-bonds"
       class="tab-section active"
     >
+      <!-- Encabezado general de la sección -->
       <div class="flex items-start justify-between mb-5">
         <div>
           <span class="section-eyebrow">Renta Fija · Soberana</span>
@@ -551,18 +552,54 @@
             Bonos Soberanos Argentinos
           </h2>
           <p class="text-[#3d5a73] text-xs mt-1.5 font-body">
-            AL, GD y otros títulos soberanos en pesos y dólares.
+            Títulos soberanos en dólares · Ley New York y Ley Argentina.
           </p>
         </div>
         <div id="stats-bonds" class="hidden sm:flex items-center gap-3 text-right">
-          <!-- JS: chips de stats rápidas -->
+          <!-- JS: chips de stats rápidas del total -->
         </div>
       </div>
       <div class="lv-divider mb-5"></div>
 
-      <div id="table-bonds" class="table-wrapper min-h-[220px]">
-        <!-- Tabla inyectada por JS -->
+      <!-- ── Sub-sección: Ley New York ── -->
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-3">
+          <!-- Etiqueta con badge -->
+          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">
+            Ley New York
+          </span>
+          <span class="font-display text-[9px] font-bold tracking-[0.18em] uppercase
+                        px-2 py-0.5 rounded-sm
+                        bg-[#0d5184]/20 border border-[#0d5184]/40 text-[#86afce]">
+            NY
+          </span>
+        </div>
+        <div id="table-bonds-ny" class="table-wrapper min-h-[160px]">
+          <!-- Tabla Ley NY inyectada por JS -->
+        </div>
+        <div id="error-bonds-ny" class="hidden mt-3"></div>
       </div>
+
+      <!-- ── Sub-sección: Ley Argentina ── -->
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <span class="font-display font-semibold text-sm text-[#dce8f2] tracking-wide">
+            Ley Argentina
+          </span>
+          <span class="font-display text-[9px] font-bold tracking-[0.18em] uppercase
+                        px-2 py-0.5 rounded-sm
+                        bg-[#172b40]/60 border border-[#1e3a52] text-[#3d5a73]">
+            ARG
+          </span>
+        </div>
+        <div id="table-bonds-arg" class="table-wrapper min-h-[200px]">
+          <!-- Tabla Ley ARG inyectada por JS -->
+        </div>
+        <div id="error-bonds-arg" class="hidden mt-3"></div>
+      </div>
+
+      <!-- Contenedor legacy oculto (mantiene compatibilidad con stats) -->
+      <div id="table-bonds" class="hidden"></div>
       <div id="error-bonds" class="hidden mt-3"></div>
     </section>
 
@@ -955,8 +992,6 @@
       { key: 'last',    label: 'Último',     align: 'right', optional: false },
       { key: 'change',  label: 'Var %',      align: 'right', optional: false },
       { key: 'volume',  label: 'Volumen',    align: 'right', optional: true  },
-      { key: 'bid',     label: 'Compra',     align: 'right', optional: true  },
-      { key: 'ask',     label: 'Venta',      align: 'right', optional: true  },
     ];
 
 
@@ -1240,8 +1275,6 @@
         html += '<td class="text-right font-data">' + fmtPrice(item.last) + '</td>';
         html += '<td class="text-right font-data">' + fmtChange(item.change) + '</td>';
         html += '<td class="text-right font-data col-optional">' + fmtVolume(item.volume) + '</td>';
-        html += '<td class="text-right font-data col-optional">' + fmtPrice(item.bid) + '</td>';
-        html += '<td class="text-right font-data col-optional">' + fmtPrice(item.ask) + '</td>';
         html += '</tr>';
       });
 
@@ -1405,9 +1438,107 @@
       section.statsEl.classList.remove('hidden');
     }
 
+    /* ----------------------------------------------------------
+       BONOS SOBERANOS: filtros por Ley
+       Los tickers se filtran del endpoint arg_bonds
+    ---------------------------------------------------------- */
+    var BONDS_NY  = ['GD29D','GD30D','GD35D','GD38D','GD41D'];
+    var BONDS_ARG = ['AO27D','AL29D','AN29D','AL30D','AL35D','AE38D','AL41D'];
+
+    /**
+     * Renderiza las dos sub-tablas de bonos soberanos.
+     * Filtra los items crudos por lista de tickers.
+     */
+    function renderBondSubsections(allItems) {
+      // Subsección Ley NY
+      var nySection = {
+        tableEl:  document.getElementById('table-bonds-ny'),
+        errorEl:  document.getElementById('error-bonds-ny'),
+        statsEl:  null,
+        sortKey:  null,
+        sortDir:  'asc',
+        rawData:  null,
+        label:    'Ley NY'
+      };
+
+      // Subsección Ley ARG
+      var argSection = {
+        tableEl:  document.getElementById('table-bonds-arg'),
+        errorEl:  document.getElementById('error-bonds-arg'),
+        statsEl:  null,
+        sortKey:  null,
+        sortDir:  'asc',
+        rawData:  null,
+        label:    'Ley ARG'
+      };
+
+      // Filtrar por tickers (case-insensitive)
+      var nyItems  = allItems.filter(function(item) {
+        var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
+        return BONDS_NY.indexOf(sym) !== -1;
+      });
+
+      var argItems = allItems.filter(function(item) {
+        var sym = (item.symbol || item.ticker || item.simbolo || item.id || '').toUpperCase();
+        return BONDS_ARG.indexOf(sym) !== -1;
+      });
+
+      // Guardar rawData y renderizar
+      nySection.rawData  = nyItems;
+      argSection.rawData = argItems;
+
+      // Guardar en window para que el sort pueda accederlos
+      window._bondNySection  = nySection;
+      window._bondArgSection = argSection;
+
+      renderTable(nySection,  nyItems);
+      renderTable(argSection, argItems);
+    }
+
     /** Carga todas las secciones en paralelo */
     function loadAllSections() {
-      Object.keys(SECTIONS).forEach(function(key) {
+      // Bonos soberanos: carga especial con split por ley
+      var bondsSection = SECTIONS.bonds;
+      bondsSection.errorEl.classList.add('hidden');
+      bondsSection.errorEl.innerHTML = '';
+      showSkeleton(document.getElementById('table-bonds-ny'));
+      showSkeleton(document.getElementById('table-bonds-arg'));
+
+      fetch(bondsSection.url)
+        .then(function(res) {
+          if (!res.ok) { throw new Error('HTTP ' + res.status); }
+          return res.json();
+        })
+        .then(function(data) {
+          var items = Array.isArray(data) ? data
+                    : data.data   ? data.data
+                    : data.items  ? data.items
+                    : data.result ? data.result
+                    : [];
+
+          // Guardar todos para las stats generales
+          bondsSection.rawData = items;
+          bondsSection.sortKey = null;
+          bondsSection.sortDir = 'asc';
+
+          renderBondSubsections(items);
+          renderStats(bondsSection);
+
+          console.info(
+            '%c LV Capital %c bonds -> NY:' + BONDS_NY.length + ' ARG:' + BONDS_ARG.length,
+            'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
+            'color:#3d5a73'
+          );
+        })
+        .catch(function(err) {
+          console.error('[LV Capital] Error cargando bonds:', err.message);
+          var msg = err.message || 'No se pudo conectar con data912.com';
+          showError({ tableEl: document.getElementById('table-bonds-ny'),  errorEl: document.getElementById('error-bonds-ny'),  label: 'Bonos Ley NY'  }, msg);
+          showError({ tableEl: document.getElementById('table-bonds-arg'), errorEl: document.getElementById('error-bonds-arg'), label: 'Bonos Ley ARG' }, msg);
+        });
+
+      // Resto de secciones: carga normal
+      ['notes','stocks','cedears'].forEach(function(key) {
         loadSection(key);
       });
     }
