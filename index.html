@@ -922,24 +922,28 @@
         url:       API.bonds,
         tableEl:   DOM.tableBonds,
         errorEl:   DOM.errorBonds,
+        statsEl:   document.getElementById('stats-bonds'),
         label:     'Bonos Soberanos'
       },
       notes: {
         url:       API.notes,
         tableEl:   DOM.tableNotes,
         errorEl:   DOM.errorNotes,
+        statsEl:   document.getElementById('stats-notes'),
         label:     'Letras & T. Fija'
       },
       stocks: {
         url:       API.stocks,
         tableEl:   DOM.tableStocks,
         errorEl:   DOM.errorStocks,
+        statsEl:   document.getElementById('stats-stocks'),
         label:     'Acciones ARG'
       },
       cedears: {
         url:       API.cedears,
         tableEl:   DOM.tableCedears,
         errorEl:   DOM.errorCedears,
+        statsEl:   document.getElementById('stats-cedears'),
         label:     'CEDears'
       }
     };
@@ -1288,6 +1292,7 @@
           section.sortDir = 'asc';
 
           renderTable(section, items);
+          renderStats(section);
 
           console.info(
             '%c LV Capital %c ' + key + ' -> ' + items.length + ' instrumentos',
@@ -1299,6 +1304,105 @@
           console.error('[LV Capital] Error cargando ' + key + ':', err.message);
           showError(section, err.message || 'No se pudo conectar con data912.com');
         });
+    }
+
+    /* ============================================================
+       PASO 7 - STATS RAPIDAS POR SECCION
+       ============================================================
+       Se muestran arriba a la derecha de cada seccion (desktop):
+         - Total de instrumentos
+         - Mayor alza del dia  (simbolo + variacion%)
+         - Mayor baja del dia  (simbolo + variacion%)
+         - % de instrumentos en verde vs rojo
+       Se calculan a partir de los datos normalizados ya descargados,
+       sin ningun fetch adicional.
+       ============================================================ */
+
+    /**
+     * Calcula y renderiza los chips de stats para una seccion.
+     * @param {Object} section - El objeto de seccion (con rawData y statsEl)
+     */
+    function renderStats(section) {
+      if (!section.statsEl || !section.rawData || section.rawData.length === 0) {
+        return;
+      }
+
+      var items = section.rawData.map(normalizeItem);
+      var total = items.length;
+
+      // Filtrar solo los que tienen variacion numerica valida
+      var withChange = items.filter(function(item) {
+        return item.change !== null && !isNaN(parseFloat(item.change));
+      });
+
+      // Mayor alza y mayor baja
+      var topGainer = null;
+      var topLoser  = null;
+
+      if (withChange.length > 0) {
+        topGainer = withChange.reduce(function(best, item) {
+          return parseFloat(item.change) > parseFloat(best.change) ? item : best;
+        });
+        topLoser = withChange.reduce(function(worst, item) {
+          return parseFloat(item.change) < parseFloat(worst.change) ? item : worst;
+        });
+      }
+
+      // Conteo positivos / negativos / neutros
+      var positives = withChange.filter(function(i) { return parseFloat(i.change) > 0; }).length;
+      var negatives = withChange.filter(function(i) { return parseFloat(i.change) < 0; }).length;
+      var pctGreen  = total > 0 ? Math.round((positives / total) * 100) : 0;
+      var pctRed    = total > 0 ? Math.round((negatives / total) * 100) : 0;
+
+      /* ── Helpers para chips ── */
+      function chip(label, value, colorClass) {
+        return '<div class="flex flex-col items-end gap-0.5">'
+          + '<span class="font-display text-[9px] tracking-[0.15em] uppercase text-[#1e3a52]">'
+          + label + '</span>'
+          + '<span class="font-data text-[11px] ' + colorClass + '">' + value + '</span>'
+          + '</div>';
+      }
+
+      function separator() {
+        return '<div class="w-px h-6 bg-[#172b40] mx-1"></div>';
+      }
+
+      /* ── Construir HTML de stats ── */
+      var html = '';
+
+      // Total de instrumentos
+      html += chip('Instrumentos', total, 'text-[#86afce]');
+
+      if (topGainer && parseFloat(topGainer.change) > 0) {
+        html += separator();
+        var gainVal = '+' + parseFloat(topGainer.change).toFixed(2) + '%';
+        html += chip('Mayor alza', topGainer.symbol + ' ' + gainVal, 'var-positive');
+      }
+
+      if (topLoser && parseFloat(topLoser.change) < 0) {
+        html += separator();
+        var lossVal = parseFloat(topLoser.change).toFixed(2) + '%';
+        html += chip('Mayor baja', topLoser.symbol + ' ' + lossVal, 'var-negative');
+      }
+
+      if (withChange.length > 0) {
+        html += separator();
+        // Mini barra verde/rojo
+        html += '<div class="flex flex-col items-end gap-1">'
+          + '<span class="font-display text-[9px] tracking-[0.15em] uppercase text-[#1e3a52]">Mercado</span>'
+          + '<div class="flex items-center gap-1.5">'
+          +   '<span class="font-data text-[10px] var-positive">' + pctGreen + '%▲</span>'
+          +   '<div class="flex h-1.5 w-16 rounded-full overflow-hidden bg-[#172b40]">'
+          +     '<div class="bg-[#4db88a] transition-all duration-500" style="width:' + pctGreen + '%"></div>'
+          +     '<div class="bg-[#e05c5c] transition-all duration-500" style="width:' + pctRed + '%"></div>'
+          +   '</div>'
+          +   '<span class="font-data text-[10px] var-negative">' + pctRed + '%▼</span>'
+          + '</div>'
+          + '</div>';
+      }
+
+      section.statsEl.innerHTML = html;
+      section.statsEl.classList.remove('hidden');
     }
 
     /** Carga todas las secciones en paralelo */
