@@ -424,16 +424,34 @@
     var REFRESH_INTERVAL = 30000;
 
     // --- MERCADOS GLOBALES (Yahoo Finance) ---
+    /* Activos globales - configuracion de display */
     var GLOBAL_ASSETS = [
-      { symbol: '%5EGSPC', name: 'S&amp;P 500',  label: 'EE.UU.',          icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
-      { symbol: '%5EIXIC', name: 'NASDAQ',        label: 'EE.UU.',          icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
-      { symbol: '%5EMERV', name: 'MERVAL',        label: 'Argentina',       icon: 'AR', prefix: '$', decimals: 0, accent: '#0d5184' },
-      { symbol: 'GC%3DF',  name: 'ORO',           label: 'USD / oz',        icon: 'AU', prefix: '$', decimals: 0, accent: '#c9943a' },
-      { symbol: 'CL%3DF',  name: 'PETR&Oacute;LEO WTI', label: 'USD / bbl', icon: 'OI', prefix: '$', decimals: 2, accent: '#86afce' },
-      { symbol: '%5ETNX',  name: 'TASA 10Y',      label: 'US Treasury',     icon: 'BD', prefix: '',  decimals: 3, suffix: '%', accent: '#3d5a73' },
-      { symbol: 'BTC-USD', name: 'BITCOIN',       label: 'Crypto USD',      icon: 'BT', prefix: '$', decimals: 0, accent: '#c9943a' },
-      { symbol: 'ETH-USD', name: 'ETHEREUM',      label: 'Crypto USD',      icon: 'ET', prefix: '$', decimals: 0, accent: '#86afce' },
+      { id: 'sp500',    name: 'S&amp;P 500',         label: 'EE.UU.',           icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
+      { id: 'nasdaq',   name: 'NASDAQ',               label: 'EE.UU.',           icon: 'US', prefix: '',  decimals: 0, accent: '#86afce' },
+      { id: 'merval',   name: 'MERVAL',               label: 'Argentina',        icon: 'AR', prefix: '$', decimals: 0, accent: '#0d5184' },
+      { id: 'gold',     name: 'ORO',                  label: 'USD / oz',         icon: 'AU', prefix: '$', decimals: 0, accent: '#c9943a' },
+      { id: 'oil',      name: 'PETR&Oacute;LEO WTI', label: 'USD / bbl',        icon: 'OI', prefix: '$', decimals: 2, accent: '#86afce' },
+      { id: 'tnx',      name: 'TASA 10Y',             label: 'US Treasury',      icon: 'BD', prefix: '',  decimals: 3, suffix: '%', accent: '#3d5a73' },
+      { id: 'bitcoin',  name: 'BITCOIN',              label: 'Crypto USD',       icon: 'BT', prefix: '$', decimals: 0, accent: '#c9943a' },
+      { id: 'ethereum', name: 'ETHEREUM',             label: 'Crypto USD',       icon: 'ET', prefix: '$', decimals: 0, accent: '#86afce' },
     ];
+
+    /* Yahoo Finance symbols por ID (indices + commodities) */
+    var YAHOO_SYMBOLS = {
+      'sp500':  '^GSPC',
+      'nasdaq': '^IXIC',
+      'merval': '^MERV',
+      'gold':   'GC=F',
+      'oil':    'CL=F',
+      'tnx':    '^TNX',
+    };
+
+    /* CoinGecko IDs para crypto (API publica, sin key, CORS OK) */
+    var COINGECKO_IDS = {
+      'bitcoin':  'bitcoin',
+      'ethereum': 'ethereum',
+    };
+
 
     var ICON_STYLES = {
       'US': { bg:'rgba(134,175,206,0.12)', color:'#86afce', text:'US' },
@@ -485,51 +503,83 @@
       }
     }
 
-    /* Yahoo Finance requiere proxy CORS para llamadas desde el browser.
-       Intentamos dos proxies en cascada por si uno falla. */
-    var CORS_PROXIES = [
-      'https://corsproxy.io/?',
-      'https://api.allorigins.win/raw?url=',
-    ];
+    /* ─────────────────────────────────────────────────────────────
+       FETCH MERCADOS GLOBALES - estrategia mixta sin API key
+       - Yahoo Finance batch via proxy (indices + commodities)
+       - CoinGecko directo (CORS OK, sin key) para BTC/ETH
+       ───────────────────────────────────────────────────────────── */
 
-    function fetchYahooSymbol(asset) {
-      var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + asset.symbol
-                   + '?interval=1d&range=2d&corsDomain=finance.yahoo.com';
+    function fetchYahooMarkets(yahooAssets) {
+      var symbols = yahooAssets.map(function(a){ return YAHOO_SYMBOLS[a.id]; }).join(',');
+      var yahooUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + symbols;
+      /* Proxies en cascada - sin encodeURIComponent para evitar doble encoding */
+      var proxies = [
+        'https://corsproxy.io/?' + yahooUrl,
+        'https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl),
+        'https://thingproxy.freeboard.io/fetch/' + yahooUrl,
+      ];
 
-      // Intentar proxies en cascada
-      function tryProxy(proxyIndex) {
-        if (proxyIndex >= CORS_PROXIES.length) {
-          return Promise.resolve({ asset: asset, price: null, change: 0, changeAbs: 0, error: true });
+      function tryProxy(i) {
+        if (i >= proxies.length) {
+          return Promise.resolve(yahooAssets.map(function(a){
+            return { asset:a, price:null, change:0, changeAbs:0, error:true };
+          }));
         }
-        var url = CORS_PROXIES[proxyIndex] + encodeURIComponent(yahooUrl);
-        return fetch(url, { headers: { 'Accept': 'application/json' } })
-          .then(function(res) {
-            if (!res.ok) { throw new Error('HTTP ' + res.status); }
-            return res.json();
+        return fetch(proxies[i])
+          .then(function(res){ if(!res.ok){throw new Error(res.status);} return res.json(); })
+          .then(function(raw){
+            var data = raw.contents ? JSON.parse(raw.contents) : raw;
+            var quotes = (data.quoteResponse && data.quoteResponse.result) ? data.quoteResponse.result : [];
+            return yahooAssets.map(function(asset){
+              var sym = YAHOO_SYMBOLS[asset.id];
+              var q = null;
+              for (var j=0;j<quotes.length;j++){ if(quotes[j].symbol===sym){q=quotes[j];break;} }
+              if (!q){ return {asset:asset,price:null,change:0,changeAbs:0,error:true}; }
+              var price  = q.regularMarketPrice;
+              var prev   = q.regularMarketPreviousClose || price;
+              var change = prev ? ((price-prev)/prev)*100 : 0;
+              return {asset:asset, price:price, change:change, changeAbs:price-prev, error:false};
+            });
           })
-          .then(function(data) {
-            // allorigins envuelve en {contents: "..."}
-            var parsed = typeof data === 'string' ? JSON.parse(data)
-                       : data.contents ? JSON.parse(data.contents)
-                       : data;
-            var meta      = parsed.chart.result[0].meta;
-            var price     = meta.regularMarketPrice;
-            var prev      = meta.previousClose || meta.chartPreviousClose || price;
-            var change    = prev ? ((price - prev) / prev) * 100 : 0;
-            var changeAbs = price - prev;
-            return { asset: asset, price: price, change: change, changeAbs: changeAbs, error: false };
-          })
-          .catch(function() {
-            // Siguiente proxy
-            return tryProxy(proxyIndex + 1);
-          });
+          .catch(function(){ return tryProxy(i+1); });
       }
-
       return tryProxy(0);
     }
 
+    function fetchCryptoMarkets(cryptoAssets) {
+      var ids = cryptoAssets.map(function(a){ return COINGECKO_IDS[a.id]; }).join(',');
+      /* CoinGecko tiene CORS habilitado y no requiere API key */
+      var url = 'https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true';
+      return fetch(url)
+        .then(function(res){ if(!res.ok){throw new Error(res.status);} return res.json(); })
+        .then(function(data){
+          return cryptoAssets.map(function(asset){
+            var geckoId = COINGECKO_IDS[asset.id];
+            var d = data[geckoId];
+            if (!d){ return {asset:asset,price:null,change:0,changeAbs:0,error:true}; }
+            var price  = d.usd;
+            var change = d.usd_24h_change || 0;
+            var prev   = change !== 0 ? price / (1 + change/100) : price;
+            return {asset:asset, price:price, change:change, changeAbs:price-prev, error:false};
+          });
+        })
+        .catch(function(){
+          return cryptoAssets.map(function(a){return {asset:a,price:null,change:0,changeAbs:0,error:true};});
+        });
+    }
+
     function loadGlobalMarkets() {
-      Promise.all(GLOBAL_ASSETS.map(fetchYahooSymbol)).then(renderGlobalMarkets);
+      var yahooAssets  = GLOBAL_ASSETS.filter(function(a){ return !!YAHOO_SYMBOLS[a.id]; });
+      var cryptoAssets = GLOBAL_ASSETS.filter(function(a){ return !!COINGECKO_IDS[a.id]; });
+      Promise.all([fetchYahooMarkets(yahooAssets), fetchCryptoMarkets(cryptoAssets)])
+        .then(function(parts){
+          var all = parts[0].concat(parts[1]);
+          var ordered = GLOBAL_ASSETS.map(function(asset){
+            for(var i=0;i<all.length;i++){ if(all[i].asset.id===asset.id){ return all[i]; } }
+            return {asset:asset,price:null,change:0,changeAbs:0,error:true};
+          });
+          renderGlobalMarkets(ordered);
+        });
     }
 
     // --- DOM REFS ---
