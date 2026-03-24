@@ -1893,14 +1893,18 @@
 
     /** Carga todas las secciones en paralelo */
     function loadAllSections() {
-      // Bonos soberanos: carga especial con split por ley
+
+      // ── Bonos + Subsoberanos: mismo endpoint arg_bonds, split en JS ─
       var bondsSection = SECTIONS.bonds;
       bondsSection.errorEl.classList.add('hidden');
       bondsSection.errorEl.innerHTML = '';
-      // Solo skeleton en carga inicial
+
+      // Skeleton solo en carga inicial (evita flash en refresh)
       if (!bondsSection.rawData || bondsSection.rawData.length === 0) {
         showSkeleton(document.getElementById('table-bonds-ny'));
         showSkeleton(document.getElementById('table-bonds-arg'));
+        var subsovEl = document.getElementById('table-subsov');
+        if (subsovEl) { showSkeleton(subsovEl); }
       }
 
       fetch(bondsSection.url)
@@ -1915,28 +1919,32 @@
                     : data.result ? data.result
                     : [];
 
-          // Guardar todos para las stats generales
           bondsSection.rawData = items;
           bondsSection.sortKey = null;
           bondsSection.sortDir = 'asc';
 
-          renderBondSubsections(items);
-          renderStats(bondsSection);
+          try { renderBondSubsections(items); } catch(e) {
+            console.error('[LV Capital] renderBondSubsections:', e.message);
+          }
+          try { renderStats(bondsSection); } catch(e) {}
 
           console.info(
-            '%c LV Capital %c bonds -> NY:' + BONDS_NY.length + ' ARG:' + BONDS_ARG.length,
+            '%c LV Capital %c bonds OK · ' + items.length + ' instrumentos',
             'background:#172b40;color:#86afce;font-weight:700;padding:2px 7px;border-radius:2px',
             'color:#3d5a73'
           );
         })
         .catch(function(err) {
-          console.error('[LV Capital] Error cargando bonds:', err.message);
+          console.error('[LV Capital] Error fetch bonds:', err.message);
           var msg = err.message || 'No se pudo conectar con data912.com';
-          showError({ tableEl: document.getElementById('table-bonds-ny'),  errorEl: document.getElementById('error-bonds-ny'),  label: 'Bonos Ley NY'  }, msg);
-          showError({ tableEl: document.getElementById('table-bonds-arg'), errorEl: document.getElementById('error-bonds-arg'), label: 'Bonos Ley ARG' }, msg);
+          [
+            { tableEl: document.getElementById('table-bonds-ny'),  errorEl: document.getElementById('error-bonds-ny'),  label: 'Bonos Ley NY'  },
+            { tableEl: document.getElementById('table-bonds-arg'), errorEl: document.getElementById('error-bonds-arg'), label: 'Bonos Ley ARG' },
+            { tableEl: document.getElementById('table-subsov'),    errorEl: document.getElementById('error-subsov'),    label: 'Subsoberanos'  },
+          ].forEach(function(s) { if (s.tableEl) { s.tableEl.innerHTML = ''; showError(s, msg); } });
         });
 
-      // Resto de secciones: carga normal
+      // ── Letras, Acciones, CEDears: carga normal ────────────────────
       ['notes','stocks','cedears'].forEach(function(key) {
         loadSection(key);
       });
