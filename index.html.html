@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <!-- ============================================================
+       META & CHARSET
+  ============================================================ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="LV Capital · Monitor de mercados argentinos: bonos soberanos, letras, acciones y CEDears." />
+  <title>LV Capital · Monitor de Mercados</title>
+
+  <!-- ============================================================
+       TAILWIND CSS (CDN)
+  ============================================================ -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    /* ── Tailwind config: paleta LV Capital ── */
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            /* ── Paleta LV Capital (BrandBook) ── */
+            'lv-navy':       '#172b40',   /* Azul primario */
+            'lv-navy-dark':  '#0f1e2d',   /* Más oscuro para fondos */
+            'lv-navy-deep':  '#0a1520',   /* Base máxima */
+            'lv-blue':       '#0d5184',   /* Azul institucional secundario */
+            'lv-steel':      '#86afce',   /* Acero / acento claro */
+            'lv-ice':        '#dce8f2',   /* Celeste muy claro / texto sobre oscuro */
+            'lv-charcoal':   '#404041',   /* Gris oscuro */
+
+            /* ── Fondos ── */
+            'bg-base':      '#0a1520',
+            'bg-surface':   '#0f1e2d',
+            'bg-card':      '#132333',
+            'bg-hover':     '#172b40',
+
+            /* ── Bordes ── */
+            'border-subtle':  '#172b40',
+            'border-default': '#1e3a52',
+
+            /* ── Texto ── */
+            'text-primary':   '#dce8f2',
+            'text-secondary': '#86afce',
+            'text-muted':     '#3d5a73',
+
+            /* ── Acentos funcionales ── */
+            'accent-main':    '#86afce',   /* Acento LV principal */
+            'accent-strong':  '#0d5184',   /* Acento fuerte */
+            'positive':       '#4db88a',   /* Verde financiero (neutro) */
+            'negative':       '#e05c5c',   /* Rojo (tonalidad apagada) */
+            'warning':        '#c9943a',
+          },
+          fontFamily: {
+            /* Display/identidad: espaciado generoso, geométrica */
+            display: ['"Raleway"', '"Helvetica Neue"', 'sans-serif'],
+            /* Body: lectura limpia */
+            body:    ['"Source Sans 3"', '"Helvetica Neue"', 'sans-serif'],
+            /* Data: números en tablas */
+            data:    ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace'],
+          },
+          boxShadow: {
+            'glow-steel': '0 0 16px 0 rgba(134,175,206,0.15)',
+            'glow-card':  '0 4px 32px 0 rgba(0,0,0,0.50)',
+            'inner-top':  'inset 0 1px 0 rgba(134,175,206,0.08)',
+          },
+          animation: {
+            'fade-in':   'fadeIn 0.4s ease forwards',
+            'slide-up':  'slideUp 0.4s ease forwards',
+            'spin-slow': 'spin 1.8s linear infinite',
+            'pulse-dot': 'pulseDot 2.5s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn:   { from: { opacity: 0 }, to: { opacity: 1 } },
+            slideUp:  { from: { opacity: 0, transform: 'translateY(8px)' },
+                        to:   { opacity: 1, transform: 'translateY(0)' } },
+            pulseDot: {
+              '0%, 100%': { opacity: 1,   transform: 'scale(1)' },
+              '50%':      { opacity: 0.3, transform: 'scale(0.75)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- ============================================================
+       GOOGLE FONTS
+       Raleway (display) · Source Sans 3 (body) · JetBrains Mono (data)
+  ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- ============================================================
+       ESTILOS GLOBALES
+  ============================================================ -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      background-color: #0a1520;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Source Sans 3', 'Helvetica Neue', sans-serif;
+      color: #dce8f2;
+      background-color: #0a1520;
+      min-height: 100dvh;
+      /* Degradado radial sutil desde el azul LV en el top */
+      background-image:
+        radial-gradient(ellipse 90% 40% at 50% -5%, rgba(13,81,132,0.18), transparent),
+        radial-gradient(ellipse 40% 60% at 95% 50%, rgba(23,43,64,0.25), transparent);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #0f1e2d; }
+    ::-webkit-scrollbar-thumb { background: #1e3a52; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #86afce; }
+
+    /* ── Selección ── */
+    ::selection { background: rgba(134,175,206,0.25); color: #dce8f2; }
+
+    /* ── Utilitarios de tipografía ── */
+    .font-display { font-family: 'Raleway', sans-serif; }
+    .font-data    { font-family: 'JetBrains Mono', monospace; }
+
+    /* ──────────────────────────────────────────────────────────
+       LOGO LV CAPITAL (SVG reconstruido del brandbook)
+    ────────────────────────────────────────────────────────── */
+    .lv-logo-mark {
+      /* El ícono geométrico del logo */
+      display: inline-block;
+    }
+
+    /* ── Tab: línea de acento ── */
+    .tab-indicator {
+      position: absolute;
+      bottom: -1px;
+      left: 0; right: 0;
+      height: 2px;
+      background: #86afce;
+      border-radius: 2px 2px 0 0;
+      box-shadow: 0 0 10px rgba(134,175,206,0.5);
+    }
+
+    /* ── Tab button ── */
+    .tab-btn {
+      position: relative;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+    .tab-btn.active           { color: #dce8f2; }
+    .tab-btn:not(.active)     { color: #3d5a73; }
+    .tab-btn:not(.active):hover {
+      color: #86afce;
+      background: rgba(134,175,206,0.04);
+    }
+
+    /* ── Sección ── */
+    .tab-section { display: none; }
+    .tab-section.active {
+      display: block;
+      animation: slideUp 0.35s ease forwards;
+    }
+
+    /* ── Tabla wrapper ── */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 6px;
+      border: 1px solid #172b40;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(134,175,206,0.06);
+    }
+
+    /* ── Tabla base ── */
+    .market-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+    }
+
+    .market-table thead th {
+      background: #0d1a27;
+      color: #3d5a73;
+      font-size: 0.625rem;  /* 10px */
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 11px 18px;
+      border-bottom: 1px solid #172b40;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .market-table thead th.sortable {
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .market-table thead th.sortable:hover { color: #86afce; }
+    .market-table thead th .sort-icon {
+      margin-left: 4px;
+      opacity: 0.3;
+      transition: opacity 0.15s;
+    }
+    .market-table thead th.sorted .sort-icon { opacity: 1; color: #86afce; }
+
+    .market-table tbody tr {
+      border-bottom: 1px solid #111f2e;
+      transition: background 0.12s ease;
+    }
+    .market-table tbody tr:last-child { border-bottom: none; }
+    .market-table tbody tr:hover      { background: #172b40; }
+
+    .market-table tbody td {
+      padding: 11px 18px;
+      white-space: nowrap;
+      color: #dce8f2;
+    }
+
+    /* ── Símbolo (primera columna) ── */
+    .col-symbol {
+      font-family: 'Raleway', sans-serif;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      color: #86afce !important;
+    }
+
+    /* ── Variación ── */
+    .var-positive { color: #4db88a; }
+    .var-negative { color: #e05c5c; }
+    .var-neutral  { color: #3d5a73; }
+
+    /* ── Live dot ── */
+    .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #86afce;
+      box-shadow: 0 0 7px rgba(134,175,206,0.9);
+      animation: pulseDot 2.5s ease-in-out infinite;
+    }
+
+    /* ── Countdown bar ── */
+    .countdown-bar {
+      height: 1px;
+      background: linear-gradient(90deg, #0d5184, #86afce);
+      border-radius: 1px;
+      transition: width 1s linear;
+    }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, #132333 25%, #172b40 50%, #132333 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.8s infinite;
+      border-radius: 3px;
+    }
+    @keyframes shimmer {
+      0%   { background-position:  200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Error toast ── */
+    .toast-error {
+      background: rgba(224,92,92,0.08);
+      border: 1px solid rgba(224,92,92,0.25);
+      border-radius: 6px;
+      color: #e05c5c;
+    }
+
+    /* ── Badge de mercado ── */
+    .market-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.5625rem; /* 9px */
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+    .badge-open  { background: rgba(77,184,138,0.12);  color: #4db88a; border: 1px solid rgba(77,184,138,0.2); }
+    .badge-close { background: rgba(61,90,115,0.20);   color: #3d5a73; border: 1px solid rgba(61,90,115,0.3); }
+
+    /* ── Sección heading decorativo ── */
+    .section-eyebrow {
+      display: inline-block;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.5625rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #0d5184;
+      margin-bottom: 4px;
+    }
+
+    /* ── Divisor con gradiente LV ── */
+    .lv-divider {
+      height: 1px;
+      background: linear-gradient(90deg, #172b40 0%, #0d5184 40%, #172b40 100%);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .col-optional { display: none; }
+      .market-table thead th,
+      .market-table tbody td { padding: 9px 12px; }
+    }
+  </style>
+</head>
+
+<!-- ============================================================
+     BODY
+============================================================ -->
+<body class="antialiased">
+
+  <!-- ============================================================
+       HEADER: Logo LV Capital + estado del mercado
+  ============================================================ -->
+  <header class="sticky top-0 z-50 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md">
+    <div class="max-w-screen-xl mx-auto px-5 sm:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <!-- ── Identidad: Logo SVG + wordmark ── -->
+        <div class="flex items-center gap-4">
+
+          <!-- Logo mark: V sólida + bloque cuadrado (fiel al brandbook) -->
+          <div class="lv-logo-mark shrink-0">
+            <svg width="34" height="32" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Brazo izquierdo: banda diagonal ancha, top-left a bottom-center -->
+              <polygon points="0,0 9,0 20,30 11,30" fill="#86afce"/>
+              <!-- Brazo derecho: sube del bottom-center hacia mid-right -->
+              <polygon points="11,30 20,30 24,17 15,17" fill="#86afce"/>
+              <!-- Bloque cuadrado upper-right: acento institucional #0d5184 -->
+              <rect x="21" y="0" width="13" height="13" fill="#0d5184"/>
+            </svg>
+          </div>
+
+          <!-- Wordmark -->
+          <div class="flex flex-col leading-none">
+            <span class="font-display font-bold text-[#dce8f2] text-sm tracking-[0.22em] uppercase">
+              LV Capital
+            </span>
+            <span class="font-display font-light text-[#3d5a73] text-[9px] tracking-[0.3em] uppercase mt-0.5">
+              Monitor de Mercados
+            </span>
+          </div>
+
+          <!-- Separador -->
+          <div class="w-px h-8 bg-[#172b40] hidden sm:block mx-1"></div>
+          <!-- Sub-label -->
+          <span class="hidden sm:block font-display text-[#1e3a52] text-[10px] tracking-[0.15em] uppercase">
+            BYMA · ARG
+          </span>
+        </div>
+
+        <!-- ── Estado: live + hora + badge + refresh ── -->
+        <div class="flex items-center gap-3">
+
+          <!-- Live indicator + hora -->
+          <div class="flex items-center gap-2 text-[#3d5a73]">
+            <span class="live-dot" id="live-dot" title="Auto-actualización activa"></span>
+            <span class="font-data text-[11px] hidden sm:inline" id="last-update-time">--:--:--</span>
+          </div>
+
+          <!-- Badge mercado -->
+          <span class="market-badge badge-open font-display" id="market-status-badge">
+            BYMA
+          </span>
+
+          <!-- Botón GitHub -->
+          <a
+            href="https://github.com/lvcapital/monitor-mercados"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Ver repositorio en GitHub"
+            aria-label="Repositorio GitHub"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-sm
+                   border border-[#1e3a52] bg-transparent
+                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
+                   hover:bg-[#172b40]/40
+                   transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase"
+          >
+            <!-- GitHub Octocat SVG (oficial, simplificado) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                 viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span class="hidden sm:inline">GitHub</span>
+          </a>
+
+          <!-- Botón refresh -->
+          <button
+            id="btn-refresh"
+            title="Actualizar ahora"
+            aria-label="Actualizar datos"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-sm
+                   border border-[#1e3a52] bg-transparent
+                   text-[#3d5a73] hover:text-[#86afce] hover:border-[#86afce]
+                   hover:bg-[#172b40]/40
+                   transition-all duration-200 font-display text-[10px] tracking-[0.12em] uppercase"
+          >
+            <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M8 16H3v5"/>
+            </svg>
+            <span class="hidden sm:inline">Actualizar</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+  <!-- /HEADER -->
+
+
+  <!-- ============================================================
+       NAVBAR DE TABS
+  ============================================================ -->
+  <nav
+    id="market-tabs"
+    role="tablist"
+    aria-label="Secciones del mercado"
+    class="sticky top-16 z-40 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md"
+  >
+    <div class="max-w-screen-xl mx-auto px-5 sm:px-8">
+      <ul class="flex overflow-x-auto -mb-px gap-0.5" role="list">
+
+        <!-- Tab 1: Bonos Soberanos -->
+        <li role="presentation">
+          <button
+            id="tab-bonds"
+            role="tab"
+            aria-controls="section-bonds"
+            aria-selected="true"
+            data-target="section-bonds"
+            class="tab-btn active font-display text-[10px] tracking-[0.12em] uppercase
+                   px-5 py-4 whitespace-nowrap
+                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
+          >
+            Bonos Soberanos
+            <span class="tab-indicator"></span>
+          </button>
+        </li>
+
+        <!-- Tab 2: Letras y Bonos Tasa Fija -->
+        <li role="presentation">
+          <button
+            id="tab-notes"
+            role="tab"
+            aria-controls="section-notes"
+            aria-selected="false"
+            data-target="section-notes"
+            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
+                   px-5 py-4 whitespace-nowrap
+                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
+          >
+            Letras &amp; T. Fija
+          </button>
+        </li>
+
+        <!-- Tab 3: Acciones Argentinas -->
+        <li role="presentation">
+          <button
+            id="tab-stocks"
+            role="tab"
+            aria-controls="section-stocks"
+            aria-selected="false"
+            data-target="section-stocks"
+            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
+                   px-5 py-4 whitespace-nowrap
+                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
+          >
+            Acciones ARG
+          </button>
+        </li>
+
+        <!-- Tab 4: CEDears -->
+        <li role="presentation">
+          <button
+            id="tab-cedears"
+            role="tab"
+            aria-controls="section-cedears"
+            aria-selected="false"
+            data-target="section-cedears"
+            class="tab-btn font-display text-[10px] tracking-[0.12em] uppercase
+                   px-5 py-4 whitespace-nowrap
+                   focus:outline-none focus-visible:ring-1 focus-visible:ring-[#86afce]"
+          >
+            CEDears
+          </button>
+        </li>
+
+      </ul>
+    </div>
+  </nav>
+  <!-- /TABS -->
+
+
+  <!-- ============================================================
+       COUNTDOWN BAR (barra de progreso hasta próximo refresh)
+  ============================================================ -->
+  <div class="w-full h-[1px] bg-[#0f1e2d]" aria-hidden="true">
+    <div
+      id="countdown-bar"
+      class="countdown-bar"
+      style="width: 100%"
+    ></div>
+  </div>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+  ============================================================ -->
+  <main class="max-w-screen-xl mx-auto px-5 sm:px-8 pb-20 mt-6">
+
+    <!-- Sub-header: próxima actualización (inline, más sutil) -->
+    <div class="flex items-center justify-end mb-5 gap-3" aria-hidden="true">
+      <span class="font-data text-[10px] text-[#1e3a52] tracking-wider">
+        próx. actualización en
+      </span>
+      <span id="countdown-seconds" class="font-data text-[10px] text-[#3d5a73] w-5 text-right">30</span>
+      <span class="font-data text-[10px] text-[#1e3a52]">s</span>
+    </div>
+
+
+    <!-- ── SECCIÓN 1: Bonos Soberanos Argentinos ── -->
+    <section
+      id="section-bonds"
+      role="tabpanel"
+      aria-labelledby="tab-bonds"
+      class="tab-section active"
+    >
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Renta Fija · Soberana</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
+            Bonos Soberanos Argentinos
+          </h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5 font-body">
+            AL, GD y otros títulos soberanos en pesos y dólares.
+          </p>
+        </div>
+        <div id="stats-bonds" class="hidden sm:flex items-center gap-3 text-right">
+          <!-- JS: chips de stats rápidas -->
+        </div>
+      </div>
+      <div class="lv-divider mb-5"></div>
+
+      <div id="table-bonds" class="table-wrapper min-h-[220px]">
+        <!-- Tabla inyectada por JS -->
+      </div>
+      <div id="error-bonds" class="hidden mt-3"></div>
+    </section>
+
+
+    <!-- ── SECCIÓN 2: Letras y Bonos Tasa Fija ── -->
+    <section
+      id="section-notes"
+      role="tabpanel"
+      aria-labelledby="tab-notes"
+      class="tab-section"
+    >
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Renta Fija · Tasa Fija</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
+            Letras &amp; Bonos Tasa Fija
+          </h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">
+            Letras del Tesoro, LECAP y bonos a tasa fija en pesos.
+          </p>
+        </div>
+        <div id="stats-notes" class="hidden sm:flex items-center gap-3 text-right"></div>
+      </div>
+      <div class="lv-divider mb-5"></div>
+
+      <div id="table-notes" class="table-wrapper min-h-[220px]"></div>
+      <div id="error-notes" class="hidden mt-3"></div>
+    </section>
+
+
+    <!-- ── SECCIÓN 3: Acciones Argentinas ── -->
+    <section
+      id="section-stocks"
+      role="tabpanel"
+      aria-labelledby="tab-stocks"
+      class="tab-section"
+    >
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Renta Variable · Local</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
+            Acciones Argentinas
+          </h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">
+            Panel General y Lider en BYMA. Cotizaciones en pesos.
+          </p>
+        </div>
+        <div id="stats-stocks" class="hidden sm:flex items-center gap-3 text-right"></div>
+      </div>
+      <div class="lv-divider mb-5"></div>
+
+      <div id="table-stocks" class="table-wrapper min-h-[220px]"></div>
+      <div id="error-stocks" class="hidden mt-3"></div>
+    </section>
+
+
+    <!-- ── SECCIÓN 4: CEDears ── -->
+    <section
+      id="section-cedears"
+      role="tabpanel"
+      aria-labelledby="tab-cedears"
+      class="tab-section"
+    >
+      <div class="flex items-start justify-between mb-5">
+        <div>
+          <span class="section-eyebrow">Renta Variable · Internacional</span>
+          <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">
+            CEDears
+          </h2>
+          <p class="text-[#3d5a73] text-xs mt-1.5">
+            Certificados de Depósito Argentinos. Equivalente local de acciones extranjeras.
+          </p>
+        </div>
+        <div id="stats-cedears" class="hidden sm:flex items-center gap-3 text-right"></div>
+      </div>
+      <div class="lv-divider mb-5"></div>
+
+      <div id="table-cedears" class="table-wrapper min-h-[220px]"></div>
+      <div id="error-cedears" class="hidden mt-3"></div>
+    </section>
+
+  </main>
+  <!-- /MAIN -->
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="border-t border-[#172b40] mt-auto">
+    <!-- Línea de acento superior -->
+    <div class="lv-divider"></div>
+
+    <div class="max-w-screen-xl mx-auto px-5 sm:px-8 py-7">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+
+        <!-- Logo + info -->
+        <div class="flex items-start gap-4">
+          <!-- Logo pequeño (mismo mark del header, opacidad reducida) -->
+          <svg width="20" height="19" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg"
+               class="opacity-25 mt-0.5 shrink-0">
+            <polygon points="0,0 9,0 20,30 11,30" fill="#86afce"/>
+            <polygon points="11,30 20,30 24,17 15,17" fill="#86afce"/>
+            <rect x="21" y="0" width="13" height="13" fill="#0d5184"/>
+          </svg>
+          <div class="text-xs text-[#1e3a52] leading-relaxed">
+            <p class="font-display font-semibold text-[#3d5a73] tracking-widest text-[10px] uppercase mb-1">
+              LV Capital
+            </p>
+            <p>
+              Datos provistos por
+              <a href="https://data912.com" target="_blank" rel="noopener noreferrer"
+                 class="text-[#3d5a73] hover:text-[#86afce] transition-colors underline underline-offset-2">
+                data912.com
+              </a>
+              · API pública.
+            </p>
+            <p class="mt-0.5">
+              ⚠ Los datos se actualizan cada ~20&nbsp;s en origen. Esta página refresca cada 30&nbsp;s.
+              <strong class="text-[#3d5a73]">No apta para operaciones en tiempo real.</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Links de repo + versión -->
+        <div class="flex flex-col items-start sm:items-end gap-3 shrink-0">
+
+          <!-- GitHub repo link -->
+          <a
+            href="https://github.com/lvcapital/monitor-mercados"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-2 text-[#1e3a52] hover:text-[#86afce]
+                   transition-colors duration-200 group"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="currentColor"
+                 class="opacity-50 group-hover:opacity-100 transition-opacity">
+              <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            <span class="font-display text-[10px] tracking-[0.12em] uppercase">
+              lvcapital / monitor-mercados
+            </span>
+          </a>
+
+          <!-- Versión -->
+          <div class="font-data text-[10px] text-[#172b40] text-right leading-relaxed">
+            <p class="text-[#1e3a52]">Monitor v1.0 · Vanilla JS · Tailwind CDN</p>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </footer>
+  <!-- /FOOTER -->
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    /**
+     * ================================================================
+     *  LV Capital · Monitor de Mercados · Script principal
+     * ================================================================
+     *
+     *  TODO (próximos pasos):
+     *  ─────────────────────
+     *  [ ] PASO 2 · Sistema de tabs
+     *  [ ] PASO 3 · API fetcher con skeleton + manejo de errores
+     *  [ ] PASO 4 · Render de tablas (Símbolo, Último, Var%, Vol, Bid, Ask)
+     *  [ ] PASO 5 · Auto-refresh 30s + countdown bar + reloj
+     *  [ ] PASO 6 · Sort de columnas
+     *  [ ] PASO 7 · Stats rápidas por sección
+     *
+     * ================================================================
+     */
+
+    const API = {
+      bonds:   'https://data912.com/live/arg_bonds',
+      notes:   'https://data912.com/live/arg_notes',
+      stocks:  'https://data912.com/live/arg_stocks',
+      cedears: 'https://data912.com/live/arg_cedears',
+    };
+
+    const REFRESH_INTERVAL = 30_000;
+
+    const DOM = {
+      tabButtons:       document.querySelectorAll('.tab-btn'),
+      tabSections:      document.querySelectorAll('.tab-section'),
+      liveDot:          document.getElementById('live-dot'),
+      lastUpdateTime:   document.getElementById('last-update-time'),
+      marketBadge:      document.getElementById('market-status-badge'),
+      btnRefresh:       document.getElementById('btn-refresh'),
+      countdownBar:     document.getElementById('countdown-bar'),
+      countdownSeconds: document.getElementById('countdown-seconds'),
+      tableBonds:       document.getElementById('table-bonds'),
+      tableNotes:       document.getElementById('table-notes'),
+      tableStocks:      document.getElementById('table-stocks'),
+      tableCedears:     document.getElementById('table-cedears'),
+      errorBonds:       document.getElementById('error-bonds'),
+      errorNotes:       document.getElementById('error-notes'),
+      errorStocks:      document.getElementById('error-stocks'),
+      errorCedears:     document.getElementById('error-cedears'),
+    };
+
+    const state = {
+      activeTab:      'section-bonds',
+      sortConfig:     { key: null, dir: 'asc' },
+      refreshTimer:   null,
+      countdownTimer: null,
+    };
+
+    console.info(
+      '%c LV Capital %c estructura base + brand ✓',
+      'background:#172b40;color:#86afce;font-family:Raleway,sans-serif;font-weight:700;letter-spacing:0.1em;padding:3px 8px;border-radius:2px',
+      'color:#3d5a73'
+    );
+  </script>
+
+</body>
+</html>
