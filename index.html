@@ -1488,7 +1488,9 @@
       var b  = BOND_CATALOG[symbol ? symbol.toUpperCase() : ''];
       if (!b || !b.flows || b.flows.length === 0) { return null; }
 
-      var px = parseFloat(price);
+      // API devuelve precio por c/100 VN, flujos del Excel son por c/1 VN
+      // Normalizar dividiendo precio por 100
+      var px = parseFloat(price) / 100;
       if (isNaN(px) || px <= 0) { return null; }
 
       var today = new Date().getTime();
