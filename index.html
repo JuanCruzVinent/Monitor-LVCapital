@@ -485,18 +485,47 @@
       }
     }
 
+    /* Yahoo Finance requiere proxy CORS para llamadas desde el browser.
+       Intentamos dos proxies en cascada por si uno falla. */
+    var CORS_PROXIES = [
+      'https://corsproxy.io/?',
+      'https://api.allorigins.win/raw?url=',
+    ];
+
     function fetchYahooSymbol(asset) {
-      var url = 'https://query1.finance.yahoo.com/v8/finance/chart/' + asset.symbol + '?interval=1d&range=2d&corsDomain=finance.yahoo.com';
-      return fetch(url, { headers: { 'Accept': 'application/json' } })
-        .then(function(res) { if (!res.ok) { throw new Error('HTTP ' + res.status); } return res.json(); })
-        .then(function(data) {
-          var meta   = data.chart.result[0].meta;
-          var price  = meta.regularMarketPrice;
-          var prev   = meta.previousClose || meta.chartPreviousClose || price;
-          var change = prev ? ((price - prev) / prev) * 100 : 0;
-          return { asset: asset, price: price, change: change, changeAbs: price - prev, error: false };
-        })
-        .catch(function() { return { asset: asset, price: null, change: 0, changeAbs: 0, error: true }; });
+      var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + asset.symbol
+                   + '?interval=1d&range=2d&corsDomain=finance.yahoo.com';
+
+      // Intentar proxies en cascada
+      function tryProxy(proxyIndex) {
+        if (proxyIndex >= CORS_PROXIES.length) {
+          return Promise.resolve({ asset: asset, price: null, change: 0, changeAbs: 0, error: true });
+        }
+        var url = CORS_PROXIES[proxyIndex] + encodeURIComponent(yahooUrl);
+        return fetch(url, { headers: { 'Accept': 'application/json' } })
+          .then(function(res) {
+            if (!res.ok) { throw new Error('HTTP ' + res.status); }
+            return res.json();
+          })
+          .then(function(data) {
+            // allorigins envuelve en {contents: "..."}
+            var parsed = typeof data === 'string' ? JSON.parse(data)
+                       : data.contents ? JSON.parse(data.contents)
+                       : data;
+            var meta      = parsed.chart.result[0].meta;
+            var price     = meta.regularMarketPrice;
+            var prev      = meta.previousClose || meta.chartPreviousClose || price;
+            var change    = prev ? ((price - prev) / prev) * 100 : 0;
+            var changeAbs = price - prev;
+            return { asset: asset, price: price, change: change, changeAbs: changeAbs, error: false };
+          })
+          .catch(function() {
+            // Siguiente proxy
+            return tryProxy(proxyIndex + 1);
+          });
+      }
+
+      return tryProxy(0);
     }
 
     function loadGlobalMarkets() {
