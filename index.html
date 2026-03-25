@@ -1196,9 +1196,12 @@
           return null;
         }
 
+        /* Nombres exactos del campo "casa" en dolarapi.com:
+           oficial, blue, bolsa (=MEP), contadoconliqui (=CCL),
+           mayorista, tarjeta, cripto                           */
         var oficial = findTipo('oficial');
-        var ccl     = findTipo('contadoconliqui') || findTipo('ccl') || findTipo('bolsa');
-        var mep     = findTipo('bolsa') || findTipo('mep');
+        var ccl     = findTipo('contadoconliqui');
+        var mep     = findTipo('bolsa');
 
         renderFxStrip(oficial, ccl, mep, riesgoPais);
       });
