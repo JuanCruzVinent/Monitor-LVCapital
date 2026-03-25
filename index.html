@@ -1168,43 +1168,16 @@
     }
 
     function loadFxStrip() {
-      var dolares = fetch('https://dolarapi.com/v1/dolares')
-        .then(function(r) { return r.json(); })
-        .catch(function() { return []; });
-
-      var riesgo = fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais')
-        .then(function(r) { return r.json(); })
+      /* Llama a la funcion serverless Netlify que hace el proxy
+         a dolarapi.com y argentinadatos.com sin CORS          */
+      fetch('/.netlify/functions/cotizaciones')
+        .then(function(r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
         .then(function(data) {
-          // Devuelve array ordenado por fecha — tomar el ultimo
-          if (Array.isArray(data) && data.length > 0) {
-            return data[data.length - 1].valor;
-          }
-          return null;
+          renderFxStrip(data.oficial, data.ccl, data.mep, data.riesgoPais);
         })
-        .catch(function() { return null; });
-
-      Promise.all([dolares, riesgo]).then(function(results) {
-        var tipos    = results[0] || [];
-        var riesgoPais = results[1];
-
-        function findTipo(casa) {
-          for (var i = 0; i < tipos.length; i++) {
-            if (tipos[i].casa && tipos[i].casa.toLowerCase() === casa.toLowerCase()) {
-              return tipos[i];
-            }
-          }
-          return null;
-        }
-
-        /* Nombres exactos del campo "casa" en dolarapi.com:
-           oficial, blue, bolsa (=MEP), contadoconliqui (=CCL),
-           mayorista, tarjeta, cripto                           */
-        var oficial = findTipo('oficial');
-        var ccl     = findTipo('contadoconliqui');
-        var mep     = findTipo('bolsa');
-
-        renderFxStrip(oficial, ccl, mep, riesgoPais);
-      });
+        .catch(function(err) {
+          console.warn('[LV Capital] cotizaciones fallo:', err.message);
+        });
     }
 
     // --- CLOCK ---
