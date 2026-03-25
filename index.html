@@ -1077,25 +1077,33 @@
 
     // --- RENDER BOND SUBSECTIONS ---
     function renderBondSubsections(allItems) {
-      function mkSection(tableId,errorId,statsId,label,isSubsov){
-        return {tableEl:document.getElementById(tableId),errorEl:document.getElementById(errorId),statsEl:statsId?document.getElementById(statsId):null,sortKey:null,sortDir:'asc',rawData:null,label:label,isSubsov:!!isSubsov};
+      function mkSection(tid,eid,sid,label,isSubsov) {
+        return {tableEl:document.getElementById(tid),errorEl:document.getElementById(eid),
+                statsEl:sid?document.getElementById(sid):null,
+                sortKey:null,sortDir:'asc',rawData:null,label:label,isSubsov:!!isSubsov};
       }
-      function filterBy(arr){
+      function filterBy(arr) {
         return allItems.filter(function(item){
           var sym=(item.symbol||item.ticker||item.simbolo||item.id||'').toUpperCase();
           return arr.indexOf(sym)!==-1;
         });
       }
-      var ny  =mkSection('table-bonds-ny', 'error-bonds-ny', null, 'Ley NY');
-      var arg =mkSection('table-bonds-arg','error-bonds-arg',null, 'Ley ARG');
-      var sub =mkSection('table-subsov',   'error-subsov',   'stats-subsov','Subsoberanos',true);
-      ny.rawData  =filterBy(BONDS_NY);
-      arg.rawData =filterBy(BONDS_ARG);
-      sub.rawData =filterBy(BONDS_SUBSOV);
-      renderBondsTable(ny,  ny.rawData);
-      renderBondsTable(arg, arg.rawData);
-      renderBondsTable(sub, sub.rawData);
+      var ny      = mkSection('table-bonds-ny', 'error-bonds-ny', null,           'Ley NY');
+      var arg     = mkSection('table-bonds-arg','error-bonds-arg',null,           'Ley ARG');
+      var sub     = mkSection('table-subsov',   'error-subsov',  'stats-subsov', 'Subsoberanos',true);
+      var bopreal = mkSection('table-bopreal',  'error-bopreal', 'stats-bopreal','Bopreales');
+
+      ny.rawData      = filterBy(BONDS_NY);
+      arg.rawData     = filterBy(BONDS_ARG);
+      sub.rawData     = filterBy(BONDS_SUBSOV);
+      bopreal.rawData = filterBy(BONDS_BOPREAL);
+
+      renderBondsTable(ny,      ny.rawData);
+      renderBondsTable(arg,     arg.rawData);
+      renderBondsTable(sub,     sub.rawData);
+      renderBondsTable(bopreal, bopreal.rawData);
     }
+
 
     // --- LOAD ALL ---
     function loadAllSections() {
