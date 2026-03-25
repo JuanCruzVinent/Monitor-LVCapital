@@ -411,6 +411,20 @@
         <div id="table-bonds-arg" class="table-wrapper min-h-[200px]"></div>
         <div id="error-bonds-arg" class="hidden mt-3"></div>
       </div>
+      <!-- ── Bopreales ── -->
+      <div class="mt-8">
+        <div class="lv-divider mb-5"></div>
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <span class="section-eyebrow">Renta Fija &middot; BCRA</span>
+            <h2 class="font-display font-semibold text-lg text-[#dce8f2] tracking-wide leading-none">Bopreales</h2>
+            <p class="text-[#3d5a73] text-xs mt-1.5">Bonos para la Reconstrucci&oacute;n de una Argentina Libre &middot; En d&oacute;lares.</p>
+          </div>
+          <div id="stats-bopreal" class="hidden sm:flex items-center gap-3 text-right"></div>
+        </div>
+        <div id="table-bopreal" class="table-wrapper min-h-[180px]"></div>
+        <div id="error-bopreal" class="hidden mt-3"></div>
+      </div>
       <div id="table-bonds" class="hidden"></div>
       <div id="error-bonds" class="hidden mt-3"></div>
     </section>
@@ -938,6 +952,7 @@
       'GD29D':'09/07/2029','GD30D':'09/07/2030','GD35D':'09/07/2035','GD38D':'09/07/2038','GD41D':'09/07/2041',
       'AO27D':'29/10/2027','AL29D':'09/07/2029','AN29D':'30/11/2029','AL30D':'09/07/2030','AL35D':'09/07/2035','AE38D':'09/07/2038','AL41D':'09/07/2041',
       'CO26D':'27/10/2026','S24DD':'01/12/2027','PM29D':'19/03/2029','NDT5D':'27/04/2030','CO32D':'02/07/2032','BC33D':'26/11/2033','SFD4D':'11/12/2034','BA7DD':'01/09/2037',
+      'BPY6D':'31/05/2026','BPA7D':'31/10/2027','BPB7D':'31/10/2027','BPC7D':'31/10/2027','BPD7D':'31/10/2027','BPA8D':'31/10/2028','BPB8D':'31/10/2028',
     };
     var SUBSOV_ISSUER = {
       'CO26D':'C\u00F3rdoba','S24DD':'Salta','PM29D':'Mendoza','NDT5D':'Neuqu\u00E9n',
@@ -1010,7 +1025,8 @@
     // --- BOND TICKERS ---
     var BONDS_NY     = ['GD29D','GD30D','GD35D','GD38D','GD41D'];
     var BONDS_ARG    = ['AO27D','AL29D','AN29D','AL30D','AL35D','AE38D','AL41D'];
-    var BONDS_SUBSOV = ['CO26D','S24DD','PM29D','NDT5D','CO32D','BC33D','SFD4D','BA7DD'];
+    var BONDS_SUBSOV  = ['CO26D','S24DD','PM29D','NDT5D','CO32D','BC33D','SFD4D','BA7DD'];
+    var BONDS_BOPREAL = ['BPY6D','BPA7D','BPB7D','BPC7D','BPD7D','BPA8D','BPB8D'];
 
     // --- RENDER BONDS TABLE ---
     function renderBondsTable(section,items) {
@@ -1018,7 +1034,7 @@
       var ask=section.sortKey,adir=section.sortDir;
       var COLS=[
         {key:'symbol',  label:'S\u00EDmbolo',   align:'left',  opt:false,spec:false},
-        {key:'maturity',label:'Vencimiento',     align:'left',  opt:true, spec:true },
+        {key:'maturity',label:'Vencimiento',     align:'center',opt:true, spec:true },
         {key:'last',    label:'Precio',          align:'right', opt:false,spec:false},
         {key:'tir',     label:'TIR',             align:'right', opt:false,spec:true },
         {key:'change',  label:'Var %',           align:'right', opt:false,spec:false},
@@ -1040,7 +1056,7 @@
         var mat=BOND_MATURITY[sym]||'&mdash;';
         html+='<tr><td class="col-symbol">'+item.symbol+'</td>';
         if(section.isSubsov){html+='<td class="font-body text-[11px]" style="color:var(--text-secondary)">'+(SUBSOV_ISSUER[sym]||'&mdash;')+'</td>';}
-        html+='<td class="col-optional font-data text-[11px]" style="color:var(--text-muted)">'+mat+'</td>';
+        html+='<td class="col-optional font-data text-[11px] text-center" style="color:var(--text-muted)">'+mat+'</td>';
         html+='<td class="text-right font-data">'+fmtPrice(item.last)+'</td>';
         html+='<td class="text-right font-data">'+fmtYTM(item.symbol,item.last)+'</td>';
         html+='<td class="text-right font-data">'+fmtChange(item.change)+'</td>';
@@ -1078,7 +1094,7 @@
       // Bonds (NY + ARG + Subsov) from same endpoint
       var bondsSection={url:API.bonds,rawData:null,errorEl:document.getElementById('error-bonds'),label:'Bonos'};
       if(!bondsSection.rawData||bondsSection.rawData.length===0){
-        ['table-bonds-ny','table-bonds-arg','table-subsov'].forEach(function(id){var el=document.getElementById(id);if(el)showSkeleton(el);});
+        ['table-bonds-ny','table-bonds-arg','table-subsov','table-bopreal'].forEach(function(id){var el=document.getElementById(id);if(el)showSkeleton(el);});
       }
       fetch(API.bonds)
         .then(function(r){if(!r.ok){throw new Error('HTTP '+r.status);}return r.json();})
