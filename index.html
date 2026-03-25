@@ -176,6 +176,68 @@
     html.light ::-webkit-scrollbar-track { background:#f0f4f8; }
     html.light ::-webkit-scrollbar-thumb { background:#a8c0d4; }
 
+    /* ---- FX / Riesgo Pais strip ---- */
+    .fx-strip {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+    .fx-strip-inner {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      white-space: nowrap;
+      padding: 0 20px;
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .fx-strip-inner::-webkit-scrollbar { display: none; }
+    .fx-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 16px;
+      border-right: 1px solid var(--border-subtle);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .fx-item:first-child { padding-left: 0; }
+    .fx-item:last-child  { border-right: none; }
+    .fx-label {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .fx-val   { color: var(--text-primary); font-weight: 600; }
+    .fx-badge {
+      font-size: 0.6rem;
+      font-family: 'Raleway', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 2px;
+    }
+    .fx-badge-ccl  { background: rgba(134,175,206,0.15); color: #86afce; }
+    .fx-badge-mep  { background: rgba(13,81,132,0.20);   color: #86afce; }
+    .fx-badge-of   { background: rgba(61,90,115,0.25);   color: var(--text-muted); }
+    .fx-badge-rp   { background: rgba(201,148,58,0.18);  color: #c9943a; }
+    .fx-skel {
+      display: inline-block; width: 50px; height: 10px;
+      background: linear-gradient(90deg,var(--bg-card) 25%,var(--bg-hover) 50%,var(--bg-card) 75%);
+      background-size: 200% 100%; animation: shimmer 1.8s infinite; border-radius: 2px;
+    }
+    html.light .fx-strip { background: #ffffff; border-color: #c8d9e8; }
+
     /* ---- Global Market Cards ---- */
     .market-card {
       background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:8px;
@@ -270,6 +332,17 @@
       </div>
     </div>
   </header>
+
+  <!-- FX STRIP: Dolar + Riesgo Pais -->
+  <div class="fx-strip" id="fx-strip">
+    <div class="fx-strip-inner" id="fx-strip-inner">
+      <!-- Skeleton inicial -->
+      <div class="fx-item"><span class="fx-label">Oficial</span><span class="fx-skel"></span></div>
+      <div class="fx-item"><span class="fx-label">CCL</span><span class="fx-skel"></span></div>
+      <div class="fx-item"><span class="fx-label">MEP</span><span class="fx-skel"></span></div>
+      <div class="fx-item"><span class="fx-label">Riesgo Pa&iacute;s</span><span class="fx-skel"></span></div>
+    </div>
+  </div>
 
   <!-- TABS -->
   <nav id="market-tabs" role="tablist" class="sticky top-16 z-40 border-b border-[#172b40] bg-[#0a1520]/96 backdrop-blur-md">
@@ -1025,6 +1098,112 @@
       ['notes','stocks','cedears'].forEach(function(k){loadSection(k);});
     }
 
+    /* ─────────────────────────────────────────────────────────────
+       FX STRIP - Dolar Oficial, CCL, MEP y Riesgo Pais
+       Fuentes:
+         - dolarapi.com  : USD tipos (CORS OK, sin key)
+         - argentinadatos: Riesgo pais (CORS OK, sin key)
+       ───────────────────────────────────────────────────────────── */
+
+    function fmtUSD(val) {
+      if (!val) { return '&mdash;'; }
+      return '$' + parseFloat(val).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function renderFxStrip(oficial, ccl, mep, riesgoPais) {
+      var el = document.getElementById('fx-strip-inner');
+      if (!el) { return; }
+
+      function item(label, val, badge, badgeCls, extra) {
+        return '<div class="fx-item">'
+          + '<span class="fx-label">' + label + '</span>'
+          + '<span class="fx-badge ' + badgeCls + '">' + badge + '</span>'
+          + '<span class="fx-val">' + val + '</span>'
+          + (extra || '')
+          + '</div>';
+      }
+
+      var html = '';
+
+      // Oficial
+      html += item(
+        'D&oacute;lar Oficial',
+        oficial ? fmtUSD(oficial.venta) : '&mdash;',
+        'OFICIAL', 'fx-badge-of',
+        oficial && oficial.compra ? '<span style="color:var(--text-muted);font-size:0.65rem;margin-left:3px">C:' + fmtUSD(oficial.compra) + '</span>' : ''
+      );
+
+      // CCL
+      html += item(
+        'CCL',
+        ccl ? fmtUSD(ccl.venta) : '&mdash;',
+        'CCL', 'fx-badge-ccl', ''
+      );
+
+      // MEP
+      html += item(
+        'MEP',
+        mep ? fmtUSD(mep.venta) : '&mdash;',
+        'MEP', 'fx-badge-mep', ''
+      );
+
+      // Brecha CCL vs Oficial
+      if (oficial && ccl && oficial.venta && ccl.venta) {
+        var brecha = ((ccl.venta - oficial.venta) / oficial.venta * 100).toFixed(1);
+        html += '<div class="fx-item">'
+          + '<span class="fx-label">Brecha</span>'
+          + '<span class="fx-val ' + (brecha > 0 ? 'var-positive' : 'var-neutral') + '">'
+          + (brecha > 0 ? '+' : '') + brecha + '%</span>'
+          + '</div>';
+      }
+
+      // Riesgo Pais
+      html += item(
+        'Riesgo Pa&iacute;s',
+        riesgoPais ? riesgoPais.toLocaleString('es-AR') + ' pb' : '&mdash;',
+        'EMBI', 'fx-badge-rp', ''
+      );
+
+      el.innerHTML = html;
+    }
+
+    function loadFxStrip() {
+      var dolares = fetch('https://dolarapi.com/v1/dolares')
+        .then(function(r) { return r.json(); })
+        .catch(function() { return []; });
+
+      var riesgo = fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          // Devuelve array ordenado por fecha — tomar el ultimo
+          if (Array.isArray(data) && data.length > 0) {
+            return data[data.length - 1].valor;
+          }
+          return null;
+        })
+        .catch(function() { return null; });
+
+      Promise.all([dolares, riesgo]).then(function(results) {
+        var tipos    = results[0] || [];
+        var riesgoPais = results[1];
+
+        function findTipo(casa) {
+          for (var i = 0; i < tipos.length; i++) {
+            if (tipos[i].casa && tipos[i].casa.toLowerCase() === casa.toLowerCase()) {
+              return tipos[i];
+            }
+          }
+          return null;
+        }
+
+        var oficial = findTipo('oficial');
+        var ccl     = findTipo('contadoconliqui') || findTipo('ccl') || findTipo('bolsa');
+        var mep     = findTipo('bolsa') || findTipo('mep');
+
+        renderFxStrip(oficial, ccl, mep, riesgoPais);
+      });
+    }
+
     // --- CLOCK ---
     function updateClock(){
       var now=new Date(),el=document.getElementById('last-update-time');
@@ -1035,6 +1214,7 @@
     function doRefresh(){
       var ic=document.getElementById('refresh-icon');
       if(ic){ic.style.animation='spin 0.8s linear infinite';}
+      loadFxStrip();
       loadAllSections();
       loadGlobalMarkets();
       updateClock();
@@ -1050,6 +1230,7 @@
       updateClock();
       setInterval(updateClock, 1000);
       setInterval(doRefresh, REFRESH_INTERVAL);
+      setInterval(loadFxStrip, 120000); // FX cada 2 min
       var btnR=document.getElementById('btn-refresh');
       if(btnR){btnR.addEventListener('click',doRefresh);}
     });
