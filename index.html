@@ -280,6 +280,275 @@
       .col-optional { display:none; }
       .market-table thead th, .market-table tbody td { padding:9px 12px; }
     }
+
+    /* ======================================================
+       CHAT WIDGET - Asistente LV Capital
+    ====================================================== */
+    #lv-chat-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 1000;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #0d5184;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(13,81,132,0.5);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      color: #dce8f2;
+    }
+    #lv-chat-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px rgba(13,81,132,0.7);
+    }
+    #lv-chat-btn .chat-icon-open  { display: block; }
+    #lv-chat-btn .chat-icon-close { display: none; }
+    #lv-chat-btn.open .chat-icon-open  { display: none; }
+    #lv-chat-btn.open .chat-icon-close { display: block; }
+
+    #lv-chat-panel {
+      position: fixed;
+      bottom: 92px;
+      right: 28px;
+      z-index: 999;
+      width: 380px;
+      max-width: calc(100vw - 32px);
+      height: 540px;
+      max-height: calc(100vh - 120px);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-def);
+      border-radius: 12px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(12px) scale(0.97);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    #lv-chat-panel.open {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+    .chat-header-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0d5184;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-header-info { flex: 1; min-width: 0; }
+    .chat-header-name {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+    .chat-header-status {
+      font-size: 0.65rem;
+      color: #4db88a;
+      font-family: 'Raleway', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .chat-clear-btn {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.6rem;
+      font-family: 'Raleway', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .chat-clear-btn:hover { color: var(--text-secondary); border-color: var(--text-secondary); }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border-def); border-radius: 2px; }
+
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      animation: slideUp 0.2s ease forwards;
+    }
+    .chat-msg.user  { align-items: flex-end; }
+    .chat-msg.assistant { align-items: flex-start; }
+
+    .chat-bubble {
+      max-width: 88%;
+      padding: 9px 13px;
+      border-radius: 12px;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .chat-msg.user .chat-bubble {
+      background: #0d5184;
+      color: #dce8f2;
+      border-bottom-right-radius: 3px;
+    }
+    .chat-msg.assistant .chat-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      border-bottom-left-radius: 3px;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    html.light .chat-msg.assistant .chat-bubble {
+      background: #f0f4f8;
+      border-color: #c8d9e8;
+    }
+
+    .chat-typing {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 9px 13px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      border-bottom-left-radius: 3px;
+      width: fit-content;
+    }
+    .chat-typing span {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: typingDot 1.2s infinite;
+    }
+    .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingDot {
+      0%,60%,100% { opacity:0.3; transform:scale(0.8); }
+      30%          { opacity:1;   transform:scale(1); }
+    }
+
+    .chat-welcome {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+    }
+    .chat-welcome-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .chat-welcome h3 {
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .chat-welcome p {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .chat-suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+    .chat-suggestion {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      text-align: left;
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    .chat-suggestion:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-def);
+      color: var(--text-primary);
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-def);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--text-primary);
+      outline: none;
+      resize: none;
+      height: 36px;
+      max-height: 100px;
+      overflow-y: auto;
+      transition: border-color 0.15s;
+      line-height: 1.4;
+    }
+    .chat-input:focus { border-color: #86afce; }
+    .chat-input::placeholder { color: var(--text-muted); }
+    html.light .chat-input { background: #f8fafc; }
+
+    .chat-send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #0d5184;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #dce8f2;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .chat-send-btn:hover  { background: #0a3d63; }
+    .chat-send-btn:active { transform: scale(0.94); }
+    .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 
@@ -475,6 +744,86 @@
     </section>
 
   </main>
+
+  <!-- CHAT WIDGET -->
+  <button id="lv-chat-btn" aria-label="Abrir asistente LV Capital" title="Consultas financieras">
+    <svg class="chat-icon-open" xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <svg class="chat-icon-close" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+
+  <div id="lv-chat-panel" role="dialog" aria-label="Asistente LV Capital" aria-modal="true">
+    <!-- Header -->
+    <div class="chat-header">
+      <div class="chat-header-logo">
+        <svg width="14" height="13" viewBox="0 0 120 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="8,8 30,8 62,78 40,78" fill="#dce8f2"/>
+          <polygon points="40,78 62,78 72,52 50,52" fill="#dce8f2"/>
+          <polygon points="68,0 112,0 112,46 90,46 90,22 68,22" fill="#86afce"/>
+        </svg>
+      </div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">LV Capital IA</div>
+        <div class="chat-header-status">&#9679; En l&iacute;nea &middot; Asistente financiero</div>
+      </div>
+      <button class="chat-clear-btn" id="chat-clear-btn" title="Nueva conversaci&oacute;n">Limpiar</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-welcome" id="chat-welcome">
+        <div class="chat-welcome-icon">
+          <svg width="36" height="32" viewBox="0 0 120 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="8,8 30,8 62,78 40,78" fill="#86afce"/>
+            <polygon points="40,78 62,78 72,52 50,52" fill="#86afce"/>
+            <polygon points="68,0 112,0 112,46 90,46 90,22 68,22" fill="#0d5184"/>
+          </svg>
+        </div>
+        <h3>Asistente LV Capital</h3>
+        <p>Consult&aacute; sobre bonos, acciones, CEDears, tipo de cambio o cualquier tema del mercado local e internacional.</p>
+        <div class="chat-suggestions">
+          <button class="chat-suggestion" data-q="&iquest;Cu&aacute;l es la diferencia entre el d&oacute;lar MEP y el CCL?">
+            &iquest;Cu&aacute;l es la diferencia entre el d&oacute;lar MEP y el CCL?
+          </button>
+          <button class="chat-suggestion" data-q="&iquest;C&oacute;mo se calcula la TIR de un bono soberano?">
+            &iquest;C&oacute;mo se calcula la TIR de un bono soberano?
+          </button>
+          <button class="chat-suggestion" data-q="&iquest;Qu&eacute; son los CEDears y c&oacute;mo funcionan?">
+            &iquest;Qu&eacute; son los CEDears y c&oacute;mo funcionan?
+          </button>
+          <button class="chat-suggestion" data-q="Explicame el riesgo pa&iacute;s y qu&eacute; impacto tiene en los bonos">
+            Explicame el riesgo pa&iacute;s y su impacto en bonos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <textarea
+        id="chat-input"
+        class="chat-input"
+        placeholder="Consult&aacute; sobre el mercado..."
+        rows="1"
+        aria-label="Mensaje al asistente"
+      ></textarea>
+      <button id="chat-send-btn" class="chat-send-btn" aria-label="Enviar" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="border-t border-[#172b40] mt-auto">
@@ -1246,9 +1595,234 @@
     }
 
     // --- INIT ---
+    /* ======================================================
+       CHAT WIDGET - Asistente LV Capital con Claude API
+    ====================================================== */
+
+    var chatState = {
+      open:     false,
+      loading:  false,
+      messages: [], // { role: 'user'|'assistant', content: '...' }
+    };
+
+    var CHAT_SYSTEM_PROMPT = [
+      'Sos el asistente financiero de LV Capital, una sociedad de bolsa argentina especializada en mercados de capitales.',
+      'Tu rol es responder consultas sobre finanzas, mercados e inversiones de manera clara, precisa y profesional.',
+      '',
+      'ESPECIALIDADES:',
+      '- Bonos soberanos argentinos (AL, GD, AO, AN, AE) y subsoberanos provinciales',
+      '- Tipos de cambio: dolar oficial, CCL, MEP, blue y sus diferencias',
+      '- CEDears: funcionamiento, ratio de conversion, impacto del tipo de cambio',
+      '- Acciones argentinas (BYMA): indices, sectores, analisis',
+      '- Riesgo pais (EMBI) y su impacto en activos locales',
+      '- Calculo de TIR, duration y convexidad de bonos',
+      '- Instrumentos de renta fija: LECAP, LETES, bonos CER',
+      '- Mercados internacionales: S&P 500, NASDAQ, commodities, crypto',
+      '- Conceptos de economia argentina: inflacion, cepo, devaluacion',
+      '',
+      'ESTILO:',
+      '- Responde en espanol rioplatense (vos, sos, etc.)',
+      '- Se claro y directo, sin tecnicismos innecesarios',
+      '- Si el usuario pregunta algo fuera de finanzas, derive amablemente al tema financiero',
+      '- No des recomendaciones de inversion especificas ("compra X"), en cambio explica conceptos',
+      '- Usa formato markdown simple cuando ayude a la claridad (listas, negritas)',
+      '- Respuestas concisas: maximo 3-4 parrafos salvo que se pida detalle',
+    ].join('
+');
+
+    function chatToggle() {
+      chatState.open = !chatState.open;
+      var btn   = document.getElementById('lv-chat-btn');
+      var panel = document.getElementById('lv-chat-panel');
+      if (!btn || !panel) { return; }
+      btn.classList.toggle('open',   chatState.open);
+      panel.classList.toggle('open', chatState.open);
+      if (chatState.open) {
+        setTimeout(function() {
+          var inp = document.getElementById('chat-input');
+          if (inp) { inp.focus(); }
+        }, 250);
+      }
+    }
+
+    function chatAddMessage(role, content) {
+      chatState.messages.push({ role: role, content: content });
+      chatRenderMessages();
+    }
+
+    function chatRenderMessages() {
+      var container = document.getElementById('chat-messages');
+      if (!container) { return; }
+
+      // Ocultar welcome si hay mensajes
+      var welcome = document.getElementById('chat-welcome');
+      if (welcome) {
+        welcome.style.display = chatState.messages.length > 0 ? 'none' : 'block';
+      }
+
+      // Limpiar mensajes previos (sin el welcome)
+      var existing = container.querySelectorAll('.chat-msg');
+      existing.forEach(function(el) { el.remove(); });
+
+      // Renderizar todos los mensajes
+      chatState.messages.forEach(function(msg) {
+        var div = document.createElement('div');
+        div.className = 'chat-msg ' + msg.role;
+
+        var bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+
+        // Parseo minimo de markdown: **negrita**, *italica*, listas
+        var html = msg.content
+          .replace(/&/g,  '&amp;')
+          .replace(/</g,  '&lt;')
+          .replace(/>/g,  '&gt;')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+          .replace(/
+/g, '<br>');
+
+        bubble.innerHTML = html;
+        div.appendChild(bubble);
+        container.appendChild(div);
+      });
+
+      // Scroll al fondo
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function chatShowTyping() {
+      var container = document.getElementById('chat-messages');
+      if (!container) { return; }
+      var existing = container.querySelector('.chat-typing-wrap');
+      if (existing) { return; }
+      var wrap = document.createElement('div');
+      wrap.className = 'chat-msg assistant chat-typing-wrap';
+      wrap.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+      container.appendChild(wrap);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function chatHideTyping() {
+      var container = document.getElementById('chat-messages');
+      if (!container) { return; }
+      var el = container.querySelector('.chat-typing-wrap');
+      if (el) { el.remove(); }
+    }
+
+    function chatSetLoading(loading) {
+      chatState.loading = loading;
+      var sendBtn = document.getElementById('chat-send-btn');
+      var inp     = document.getElementById('chat-input');
+      if (sendBtn) { sendBtn.disabled = loading || !(inp && inp.value.trim()); }
+      if (inp)     { inp.disabled = loading; }
+      if (loading) { chatShowTyping(); }
+      else         { chatHideTyping(); }
+    }
+
+    function chatSend(text) {
+      if (!text || !text.trim() || chatState.loading) { return; }
+      var userText = text.trim();
+
+      // Agregar mensaje del usuario
+      chatAddMessage('user', userText);
+
+      // Limpiar input
+      var inp = document.getElementById('chat-input');
+      if (inp) { inp.value = ''; inp.style.height = '36px'; }
+
+      chatSetLoading(true);
+
+      // Llamar a la API de Claude
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: CHAT_SYSTEM_PROMPT,
+          messages: chatState.messages.map(function(m) {
+            return { role: m.role, content: m.content };
+          }),
+        }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        chatSetLoading(false);
+        var reply = (data.content && data.content[0] && data.content[0].text)
+          ? data.content[0].text
+          : 'Hubo un error al procesar tu consulta. Intentá de nuevo.';
+        chatAddMessage('assistant', reply);
+      })
+      .catch(function(err) {
+        chatSetLoading(false);
+        chatAddMessage('assistant', 'No se pudo conectar con el asistente. Verificá tu conexión e intentá de nuevo.');
+        console.error('[LV Chat]', err);
+      });
+    }
+
+    function initChat() {
+      var btn     = document.getElementById('lv-chat-btn');
+      var sendBtn = document.getElementById('chat-send-btn');
+      var inp     = document.getElementById('chat-input');
+      var clearBtn = document.getElementById('chat-clear-btn');
+
+      if (!btn) { return; }
+
+      // Toggle panel
+      btn.addEventListener('click', chatToggle);
+
+      // Boton enviar
+      if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
+          if (inp) { chatSend(inp.value); }
+        });
+      }
+
+      // Input: Enter envia, Shift+Enter nueva linea
+      if (inp) {
+        inp.addEventListener('input', function() {
+          // Auto-resize
+          inp.style.height = '36px';
+          inp.style.height = Math.min(inp.scrollHeight, 100) + 'px';
+          // Habilitar/deshabilitar boton
+          if (sendBtn) { sendBtn.disabled = !inp.value.trim() || chatState.loading; }
+        });
+
+        inp.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatSend(inp.value);
+          }
+        });
+      }
+
+      // Sugerencias de bienvenida
+      document.querySelectorAll('.chat-suggestion').forEach(function(s) {
+        s.addEventListener('click', function() {
+          var q = s.dataset.q;
+          if (q) { chatSend(q); }
+        });
+      });
+
+      // Limpiar conversacion
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+          chatState.messages = [];
+          chatRenderMessages();
+        });
+      }
+
+      // Cerrar con Escape
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && chatState.open) { chatToggle(); }
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       initTheme();
       initTabs();
+      initChat();
       loadAllSections();
       loadGlobalMarkets();
       updateClock();
