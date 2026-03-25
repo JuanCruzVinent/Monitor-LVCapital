@@ -1168,15 +1168,63 @@
     }
 
     function loadFxStrip() {
-      /* Llama a la funcion serverless Netlify que hace el proxy
-         a dolarapi.com y argentinadatos.com sin CORS          */
+      /* Estrategia en cascada:
+         1. Funcion Netlify (servidor, sin CORS)
+         2. dolarapi.com directo (funciona desde browser en algunos casos)
+         3. Mostrar guiones si todo falla                                 */
+
+      function tryDolarApiDirect() {
+        var p1 = fetch('https://dolarapi.com/v1/dolares')
+          .then(function(r) { return r.json(); })
+          .catch(function() { return []; });
+
+        var p2 = fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais')
+          .then(function(r) { return r.json(); })
+          .then(function(arr) {
+            return Array.isArray(arr) && arr.length > 0 ? arr[arr.length - 1].valor : null;
+          })
+          .catch(function() { return null; });
+
+        return Promise.all([p1, p2]).then(function(res) {
+          var tipos = res[0] || [];
+          var rp    = res[1];
+          function find(casa) {
+            for (var i = 0; i < tipos.length; i++) {
+              if (tipos[i].casa === casa) { return tipos[i]; }
+            }
+            return null;
+          }
+          if (tipos.length === 0) { throw new Error('sin datos'); }
+          return {
+            oficial:    find('oficial'),
+            ccl:        find('contadoconliqui'),
+            mep:        find('bolsa'),
+            riesgoPais: rp,
+          };
+        });
+      }
+
+      // Intentar primero con la funcion Netlify
       fetch('/.netlify/functions/cotizaciones')
-        .then(function(r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); })
+        .then(function(r) {
+          if (!r.ok) { throw new Error('HTTP ' + r.status); }
+          return r.json();
+        })
         .then(function(data) {
+          if (!data.oficial && !data.ccl) { throw new Error('datos vacios'); }
           renderFxStrip(data.oficial, data.ccl, data.mep, data.riesgoPais);
         })
         .catch(function(err) {
-          console.warn('[LV Capital] cotizaciones fallo:', err.message);
+          console.warn('[LV Capital] funcion Netlify fallo, intentando directo:', err.message);
+          // Fallback: llamar directo a las APIs
+          tryDolarApiDirect()
+            .then(function(data) {
+              renderFxStrip(data.oficial, data.ccl, data.mep, data.riesgoPais);
+            })
+            .catch(function() {
+              // Todo fallo — dejar el skeleton sin datos
+              console.warn('[LV Capital] cotizaciones: no se pudo obtener datos');
+            });
         });
     }
 
