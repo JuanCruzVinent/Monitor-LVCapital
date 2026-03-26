@@ -3,6 +3,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/lecaps"
+  to = "/.netlify/functions/lecaps"
+  status = 200
+
+[[redirects]]
   from = "/api/cotizaciones"
   to = "/.netlify/functions/cotizaciones"
   status = 200
