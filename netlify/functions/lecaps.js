@@ -57,8 +57,8 @@ const TY30P_FLOWS = [
 ];
 
 // TNA y TEM para instrumentos bullet (LECAP/BONCAP con VT_vto conocido)
-// TNA = (VT_vto / precio)^(365/dias) - 1
-// TEM = (VT_vto / precio)^(30/dias)  - 1
+// TNA = (Precio_vto / Precio_mercado - 1) / Dias_al_vto * 365
+// TEM = (1 + TNA/365)^30 - 1
 function calcRatesBullet(price, matDate, vtVto) {
   if (!price || price <= 0 || !vtVto) { return { tna: null, tem: null }; }
   const today = new Date();
@@ -66,11 +66,11 @@ function calcRatesBullet(price, matDate, vtVto) {
   const days  = Math.round((mat - today) / (1000 * 60 * 60 * 24));
   if (days <= 0) { return { tna: null, tem: null }; }
 
-  const tna = (Math.pow(vtVto / price, 365 / days) - 1) * 100;
-  const tem = (Math.pow(vtVto / price, 30  / days) - 1) * 100;
+  const tna = ((vtVto / price) - 1) / days * 365 * 100;
+  const tem = (Math.pow(1 + (tna / 100) / 365, 30) - 1) * 100;
   return {
-    tna:  Math.round(tna * 100) / 100,
-    tem:  Math.round(tem * 100) / 100,
+    tna: Math.round(tna * 100) / 100,
+    tem: Math.round(tem * 100) / 100,
   };
 }
 
