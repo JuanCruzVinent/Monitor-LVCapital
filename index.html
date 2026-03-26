@@ -941,11 +941,12 @@
       return p[2] + '/' + p[1] + '/' + p[0];
     }
 
-    /* ── TIR coloreada para LECAP/BONCAP (TNA %) ── */
-    function fmtTirPesos(tir) {
-      if (tir === null || tir === undefined || isNaN(tir)) { return '<span class="var-neutral">&mdash;</span>'; }
-      var cls = tir > 40 ? 'text-[#c9943a]' : tir > 30 ? 'text-[#86afce]' : 'color:var(--text-primary)';
-      return '<span style="' + (cls.startsWith('text') ? '' : cls) + '" class="' + (cls.startsWith('text') ? cls : '') + ' font-semibold">' + tir.toFixed(2) + '%</span>';
+    /* ── Tasa coloreada para LECAP/BONCAP ── */
+    function fmtRatePesos(val) {
+      if (val === null || val === undefined || isNaN(val)) { return '<span class="var-neutral">&mdash;</span>'; }
+      var n   = parseFloat(val);
+      var cls = n > 45 ? '#c9943a' : n > 35 ? '#86afce' : 'var(--text-primary)';
+      return '<span style="color:' + cls + ';font-weight:600">' + n.toFixed(2) + '%</span>';
     }
 
     /* ── Render tabla LECAP o BONCAP ── */
@@ -960,6 +961,7 @@
         + '<th class="col-optional text-center">Vencimiento</th>'
         + '<th class="text-right sortable" data-key="price">Precio<span class="sort-icon">&#8645;</span></th>'
         + '<th class="text-right">TNA</th>'
+        + '<th class="text-right">TEM</th>'
         + '<th class="text-right sortable" data-key="change">Var %<span class="sort-icon">&#8645;</span></th>'
         + '</tr></thead><tbody>';
 
@@ -968,7 +970,8 @@
           + '<td class="col-symbol">' + item.symbol + '</td>'
           + '<td class="col-optional font-data text-[11px] text-center" style="color:var(--text-muted)">' + fmtMatDate(item.maturity) + '</td>'
           + '<td class="text-right font-data">' + fmtPrice(item.price) + '</td>'
-          + '<td class="text-right font-data">' + fmtTirPesos(item.tir) + '</td>'
+          + '<td class="text-right font-data">' + fmtRatePesos(item.tna) + '</td>'
+          + '<td class="text-right font-data">' + fmtRatePesos(item.tem) + '</td>'
           + '<td class="text-right font-data">' + fmtChange(item.change) + '</td>'
           + '</tr>';
       });

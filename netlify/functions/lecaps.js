@@ -18,18 +18,25 @@ const MATURITY = {
   'T31Y7': '2027-05-31', 'T30J7': '2027-06-30',
 };
 
-// TIR bullet bond: (VN/precio)^(365/dias) - 1
-// Las LECAP/BONCAP cotizan como precio en ARS, VN = 1000 ARS pero
-// el precio en la API ya viene en terminos de 100 (tipo bono)
-function calcTIR(price, matDate) {
-  if (!price || price <= 0) { return null; }
+// data912 devuelve precios de arg_notes con VN = 1 ARS
+// (ej: 1.055 significa que el bono vale 1.055 ARS por cada 1 ARS de VN)
+// TNA efectiva anual = (1 / precio)^(365/días) - 1
+// TEM (tasa efectiva mensual) = (1 / precio)^(30/días) - 1
+function calcRates(price, matDate) {
+  if (!price || price <= 0) { return { tna: null, tem: null }; }
   const today = new Date();
   const mat   = new Date(matDate);
   const days  = Math.round((mat - today) / (1000 * 60 * 60 * 24));
-  if (days <= 0) { return null; }
-  // precio viene normalizado a 100 VN -> rendimiento = (100/precio)^(365/days) - 1
-  const tir = (Math.pow(100 / price, 365 / days) - 1) * 100;
-  return Math.round(tir * 100) / 100;
+  if (days <= 0) { return { tna: null, tem: null }; }
+
+  // VN = 1, el bono paga 1 al vencimiento
+  const tna = (Math.pow(1 / price, 365 / days) - 1) * 100;
+  const tem = (Math.pow(1 / price, 30  / days) - 1) * 100;
+
+  return {
+    tna: Math.round(tna * 100) / 100,
+    tem: Math.round(tem * 100) / 100,
+  };
 }
 
 function fetchJSON(url) {
@@ -58,36 +65,22 @@ exports.handler = async () => {
 
     for (const item of notes) {
       if (!LECAP_TICKERS.includes(item.symbol)) { continue; }
-      const price = parseFloat(item.c) || 0;
+      const price  = parseFloat(item.c) || 0;
       if (price <= 0) { continue; }
-      const mat   = MATURITY[item.symbol];
-      const tir   = mat ? calcTIR(price, mat) : null;
+      const mat    = MATURITY[item.symbol];
+      const rates  = mat ? calcRates(price, mat) : { tna: null, tem: null };
       const change = parseFloat(item.pct_change) || 0;
-      result.push({
-        symbol:    item.symbol,
-        price,
-        change,
-        tir,
-        maturity:  mat,
-        type:      'LECAP',
-      });
+      result.push({ symbol: item.symbol, price, change, tna: rates.tna, tem: rates.tem, maturity: mat, type: 'LECAP' });
     }
 
     for (const item of bonds) {
       if (!BONCAP_TICKERS.includes(item.symbol)) { continue; }
-      const price = parseFloat(item.c) || 0;
+      const price  = parseFloat(item.c) || 0;
       if (price <= 0) { continue; }
-      const mat   = MATURITY[item.symbol];
-      const tir   = mat ? calcTIR(price, mat) : null;
+      const mat    = MATURITY[item.symbol];
+      const rates  = mat ? calcRates(price, mat) : { tna: null, tem: null };
       const change = parseFloat(item.pct_change) || 0;
-      result.push({
-        symbol:    item.symbol,
-        price,
-        change,
-        tir,
-        maturity:  mat,
-        type:      'BONCAP',
-      });
+      result.push({ symbol: item.symbol, price, change, tna: rates.tna, tem: rates.tem, maturity: mat, type: 'BONCAP' });
     }
 
     // Ordenar por fecha de vencimiento
