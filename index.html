@@ -958,7 +958,8 @@
       }
       var html = '<table class="market-table"><thead><tr>'
         + '<th class="sortable" data-key="symbol">S&iacute;mbolo<span class="sort-icon">&#8645;</span></th>'
-        + '<th class="col-optional text-center">Vencimiento</th>'
+        + '<th class="text-center">Vencimiento</th>'
+        + '<th class="text-center col-optional">D&iacute;as</th>'
         + '<th class="text-right sortable" data-key="price">Precio<span class="sort-icon">&#8645;</span></th>'
         + '<th class="text-right">TNA</th>'
         + '<th class="text-right">TEM</th>'
@@ -966,12 +967,27 @@
         + '</tr></thead><tbody>';
 
       items.forEach(function(item) {
+        /* TIR para TY30P (bono con flujos), TNA/TEM para el resto */
+        var tnaCell = item.tir !== null && item.tir !== undefined
+          ? fmtRatePesos(item.tir) + '<span style="font-size:0.6rem;color:var(--text-muted);margin-left:3px">TIR</span>'
+          : fmtRatePesos(item.tna);
+        var temCell = item.tir !== null && item.tir !== undefined
+          ? '<span class="var-neutral">&mdash;</span>'
+          : fmtRatePesos(item.tem);
+
+        /* Color dias: verde <60, amarillo 60-180, gris >180 */
+        var dias = item.days;
+        var diasColor = dias !== null
+          ? (dias < 60 ? '#4db88a' : dias < 180 ? '#c9943a' : 'var(--text-muted)')
+          : 'var(--text-muted)';
+
         html += '<tr>'
           + '<td class="col-symbol">' + item.symbol + '</td>'
-          + '<td class="col-optional font-data text-[11px] text-center" style="color:var(--text-muted)">' + fmtMatDate(item.maturity) + '</td>'
+          + '<td class="font-data text-[11px] text-center" style="color:var(--text-muted)">' + fmtMatDate(item.maturity) + '</td>'
+          + '<td class="font-data text-[11px] text-center col-optional" style="color:' + diasColor + '">' + (dias !== null ? dias : '&mdash;') + '</td>'
           + '<td class="text-right font-data">' + fmtPrice(item.price) + '</td>'
-          + '<td class="text-right font-data">' + fmtRatePesos(item.tna) + '</td>'
-          + '<td class="text-right font-data">' + fmtRatePesos(item.tem) + '</td>'
+          + '<td class="text-right font-data">' + tnaCell + '</td>'
+          + '<td class="text-right font-data">' + temCell + '</td>'
           + '<td class="text-right font-data">' + fmtChange(item.change) + '</td>'
           + '</tr>';
       });
